@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Criar Conta</h2>
+    {% for msg in get_flashed_messages() %}
+        <p class="flash">{{ msg }}</p>
+    {% endfor %}
+    <form action="/registro" method="POST">
+        <div class="form-group">
+            <label>Nome</label>
+            <input type="text" name="nome" required>
+        </div>
+        <div class="form-group">
+            <label>Número da Conta</label>
+            <input type="text" name="numero" placeholder="1234567-8"
+                   pattern="\d{7}-\d{1}" title="Formato: 1234567-8" required>
+            <small>Formato: 7 dígitos + traço + 1 dígito (ex: 1234567-8)</small>
+        </div>
+        <div class="form-group">
+            <label>Senha</label>
+            <input type="password" name="senha" required>
+        </div>
+        <button type="submit">Cadastrar</button>
+        <p class="link">Já tem conta? <a href="/login">Entrar</a></p>
+    </form>
+</div>
+{% endblock %}

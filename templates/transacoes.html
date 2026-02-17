@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h2>Transações</h2>
+        <a href="/"><button type="button">← Dashboard</button></a>
+    </div>
+
+    <table class="tabela">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Tipo</th>
+                <th>Detalhe</th>
+                <th>Crédito</th>
+                <th>Débito</th>
+                <th>Categoria</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in registros %}
+            <tr>
+                <td>{{ r['data'] }}</td>
+                <td>{{ r['tipo'] }}</td>
+                <td>{{ r['detalhe'] }}</td>
+                <td class="valor-credito">R$ {{ "%.2f"|format(r['credito']) }}</td>
+                <td class="valor-debito">R$ {{ "%.2f"|format(r['debito']) }}</td>
+                <td>
+                    <form action="/categorizar" method="POST">
+                        <input type="hidden" name="transacao_id" value="{{ r['id'] }}">
+                        <select name="categoria" onchange="this.form.submit()">
+                            {% for cat in categorias %}
+                                <option value="{{ cat }}" {% if cat == r['categoria'] %}selected{% endif %}>
+                                    {{ cat }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

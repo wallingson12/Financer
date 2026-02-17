@@ -1,0 +1,196 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f0f2f5;
+    color: #333;
+}
+
+header {
+    background: #1a1a2e;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header a { color: white; font-size: 0.9rem; }
+
+nav {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+}
+
+nav a:hover { opacity: 1; }
+
+nav span {
+    color: #aaa;
+    font-size: 0.85rem;
+}
+
+.btn-logout {
+    background: rgba(255,255,255,0.1);
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+}
+
+.btn-logout:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+main {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    color: #555;
+}
+
+input {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+button {
+    margin-top: 1rem;
+    padding: 0.7rem 2rem;
+    background: #1a1a2e;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #16213e;
+}
+
+.resumo {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.resumo-box {
+    flex: 1;
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.resumo-box span { font-size: 0.85rem; color: #555; }
+.resumo-box strong { font-size: 1.4rem; }
+
+.credito { background: #e8f5e9; }
+.debito  { background: #ffebee; }
+.saldo   { background: #e3f2fd; }
+
+.flash {
+    background: #fff3cd;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.link {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.link a { color: #1a1a2e; font-weight: 600; }
+
+.filtro {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.filtro select {
+    padding: 0.5rem 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.tabela th {
+    background: #1a1a2e;
+    color: white;
+    padding: 0.7rem 1rem;
+    text-align: left;
+}
+
+.tabela td {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.tabela tr:hover { background: #f9f9f9; }
+
+.valor-credito { color: #4CAF50; font-weight: 600; }
+.valor-debito  { color: #f44336; font-weight: 600; }
+
+.tabela select {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.vazio {
+    text-align: center;
+    padding: 3rem;
+    color: #888;
+    font-size: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>💰 Financer</h1>
+        {% if current_user.is_authenticated %}
+            <nav>
+                <a href="/">Dashboard</a>
+                <a href="/transacoes">Transações</a>
+                <a href="/importar">Importar</a>
+                <span>Olá, {{ current_user.nome }}</span>
+                <a href="/logout" class="btn-logout">Sair</a>
+            </nav>
+        {% endif %}
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

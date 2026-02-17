@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h2>Dashboard — {{ current_user.nome }}</h2>
+        {% if not vazio %}
+            <a href="/importar"><button type="button">📂 Importar novo extrato</button></a>
+        {% endif %}
+    </div>
+
+    {% if vazio %}
+    <div class="vazio">
+        <p>📂 Nenhum extrato importado ainda.</p>
+        <a href="/importar"><button type="button">Importar agora</button></a>
+    </div>
+    {% else %}
+
+    <div class="filtro">
+        <label>Filtrar por mês:</label>
+        <select id="filtroMes" onchange="filtrar()">
+            <option value="todos">Todos</option>
+            {% for mes in meses %}
+                <option value="{{ mes }}">{{ mes }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="resumo">
+        <div class="resumo-box credito">
+            <span>Total Crédito</span>
+            <strong id="totalCredito">R$ {{ "%.2f"|format(creditos|sum) }}</strong>
+        </div>
+        <div class="resumo-box debito">
+            <span>Total Débito</span>
+            <strong id="totalDebito">R$ {{ "%.2f"|format(debitos|sum) }}</strong>
+        </div>
+        <div class="resumo-box saldo">
+            <span>Saldo</span>
+            <strong id="totalSaldo">R$ {{ "%.2f"|format(creditos|sum - debitos|sum) }}</strong>
+        </div>
+    </div>
+
+    <canvas id="grafico"></canvas>
+
+    <script>
+        const dados = {
+            meses:    {{ meses | tojson }},
+            creditos: {{ creditos | tojson }},
+            debitos:  {{ debitos | tojson }},
+            saldos:   {{ saldos | tojson }}
+        };
+
+        const ctx = document.getElementById('grafico').getContext('2d');
+        const grafico = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dados.meses,
+                datasets: [
+                    { label: 'Crédito', data: dados.creditos, backgroundColor: '#4CAF50' },
+                    { label: 'Débito',  data: dados.debitos,  backgroundColor: '#f44336' },
+                    { label: 'Saldo',   data: dados.saldos,   backgroundColor: '#2196F3', type: 'line' }
+                ]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'top' } } }
+        });
+
+        function filtrar() {
+            const mes = document.getElementById('filtroMes').value;
+            let labels, creditos, debitos, saldos;
+
+            if (mes === 'todos') {
+                labels   = dados.meses;
+                creditos = dados.creditos;
+                debitos  = dados.debitos;
+                saldos   = dados.saldos;
+            } else {
+                const i  = dados.meses.indexOf(mes);
+                labels   = [dados.meses[i]];
+                creditos = [dados.creditos[i]];
+                debitos  = [dados.debitos[i]];
+                saldos   = [dados.saldos[i]];
+            }
+
+            grafico.data.labels           = labels;
+            grafico.data.datasets[0].data = creditos;
+            grafico.data.datasets[1].data = debitos;
+            grafico.data.datasets[2].data = saldos;
+            grafico.update();
+
+            const sumCredito = creditos.reduce((a, b) => a + b, 0);
+            const sumDebito  = debitos.reduce((a, b) => a + b, 0);
+            document.getElementById('totalCredito').textContent = `R$ ${sumCredito.toFixed(2)}`;
+            document.getElementById('totalDebito').textContent  = `R$ ${sumDebito.toFixed(2)}`;
+            document.getElementById('totalSaldo').textContent   = `R$ ${(sumCredito - sumDebito).toFixed(2)}`;
+        }
+    </script>
+    {% endif %}
+</div>
+{% endblock %}
