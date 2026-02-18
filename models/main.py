@@ -1,6 +1,16 @@
+import re
 
 class Conta():
+    @staticmethod
+    def validar_numero(numero):
+        return bool(re.fullmatch(r"\d{7}-\d", numero))
+
     def __init__(self, nome, numero):
+
+        # Validação: deve ser 7 dígitos + '-' + 1 dígito
+        if not self.validar_numero(numero):
+            raise ValueError(f"Número de conta inválido: {numero}")
+
         self.nome = nome
         self.numero = numero
         self.dados = None
