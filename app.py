@@ -1,4 +1,5 @@
 import os
+import re
 
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import (
@@ -12,7 +13,7 @@ from flask_login import (
 from services.conta_service import ContaService
 from infrastructure.database import criar_tabelas
 from repositories.repository import UsuarioRepository, ContaRepository
-from models.main import Conta
+
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -36,7 +37,7 @@ def create_app() -> Flask:
             numero = request.form.get('numero')
             senha = request.form.get('senha')
 
-            if not Conta.validar_numero(numero):
+            if not re.match(r'^\d{7}-\d{1}$', numero):
                 flash('Número de conta inválido! Use o formato: 1234567-8', 'erro')
                 return redirect(url_for('registro'))
 
@@ -74,8 +75,7 @@ def create_app() -> Flask:
     @app.route('/')
     @login_required
     def index():
-        usuario_id = current_user.id
-        saldos = conta_repo.buscar_saldos_mensais(usuario_id)
+        saldos = conta_repo.buscar_saldos_mensais(current_user.id)
 
         if not saldos:
             return render_template(
@@ -83,10 +83,10 @@ def create_app() -> Flask:
                 meses=[], creditos=[], debitos=[], saldos=[], vazio=True
             )
 
-        meses = [str(row.mes) for row in saldos.itertuples()]
-        creditos = [round(row.total_credito, 2) for row in saldos.itertuples()]
-        debitos = [round(row.total_debito, 2) for row in saldos.itertuples()]
-        saldos_v = [round(row.saldo, 2) for row in saldos.itertuples()]
+        meses = [row['mes'] for row in saldos]
+        creditos = [row['total_credito'] for row in saldos]
+        debitos = [row['total_debito'] for row in saldos]
+        saldos_v = [row['saldo'] for row in saldos]
 
         return render_template(
             'dashboard.html',
@@ -101,23 +101,17 @@ def create_app() -> Flask:
     @app.route('/upload', methods=['POST'])
     @login_required
     def upload():
-        usuario = current_user  # salva referência
         arquivo = request.files['extrato']
-        conta = conta_service.processar_upload(arquivo, usuario)
+        conta = conta_service.processar_upload(arquivo, current_user)
 
-        # Cria listas de forma mais limpa usando itertuples
-        meses = [str(row.mes) for row in conta.saldos_mensais.itertuples()]
-        saldos = [round(row.saldo, 2) for row in conta.saldos_mensais.itertuples()]
-        creditos = [round(row.total_credito, 2) for row in conta.saldos_mensais.itertuples()]
-        debitos = [round(row.total_debito, 2) for row in conta.saldos_mensais.itertuples()]
+        meses = [str(m) for m in conta.saldos_mensais.index]
+        saldos = [round(row['saldo'], 2) for _, row in conta.saldos_mensais.iterrows()]
+        creditos = [round(row['total_credito'], 2) for _, row in conta.saldos_mensais.iterrows()]
+        debitos = [round(row['total_debito'], 2) for _, row in conta.saldos_mensais.iterrows()]
 
         return render_template(
             'dashboard.html',
-            meses=meses,
-            saldos=saldos,
-            creditos=creditos,
-            debitos=debitos,
-            vazio=False
+            meses=meses, saldos=saldos, creditos=creditos, debitos=debitos, vazio=False
         )
 
     CATEGORIAS = [
@@ -128,8 +122,7 @@ def create_app() -> Flask:
     @app.route('/transacoes')
     @login_required
     def transacoes():
-        usuario_id = current_user.id
-        registros = conta_repo.buscar_transacoes(usuario_id)
+        registros = conta_repo.buscar_transacoes(current_user.id)
         return render_template('transacoes.html', registros=registros, categorias=CATEGORIAS)
 
     @app.route('/categorizar', methods=['POST'])
@@ -137,8 +130,29 @@ def create_app() -> Flask:
     def categorizar():
         transacao_id = request.form.get('transacao_id')
         categoria = request.form.get('categoria')
+        aplicar_todas = request.form.get('aplicar_todas')
         usuario_id = current_user.id
-        conta_repo.atualizar_categoria(transacao_id, categoria, usuario_id)
+
+        if aplicar_todas == '1':
+            # Busca a transação para pegar tipo/detalhe
+            transacao = conta_repo.buscar_transacao_por_id(transacao_id, usuario_id)
+
+            if transacao:
+                # Atualiza todas iguais
+                qtd = conta_repo.atualizar_categoria_em_lote(
+                    transacao['tipo'],
+                    transacao['detalhe'],
+                    categoria,
+                    usuario_id
+                )
+                flash(f'✅ {qtd} transação(ões) categorizadas como "{categoria}"!', 'success')
+            else:
+                flash('❌ Transação não encontrada', 'error')
+        else:
+            # Atualiza só essa transação
+            conta_repo.atualizar_categoria(transacao_id, categoria, usuario_id)
+            flash(f'✅ Transação categorizada como "{categoria}"!', 'success')
+
         return redirect(url_for('transacoes'))
 
     return app
@@ -148,4 +162,3 @@ if __name__ == '__main__':
     app = create_app()
     criar_tabelas()
     app.run(debug=True)
-

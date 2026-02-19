@@ -26,15 +26,25 @@
                 <td class="valor-credito">R$ {{ "%.2f"|format(r['credito']) }}</td>
                 <td class="valor-debito">R$ {{ "%.2f"|format(r['debito']) }}</td>
                 <td>
-                    <form action="/categorizar" method="POST">
+                    <form action="/categorizar" method="POST" class="form-categoria">
                         <input type="hidden" name="transacao_id" value="{{ r['id'] }}">
-                        <select name="categoria" onchange="this.form.submit()">
+
+                        <select name="categoria" onchange="mostrarOpcoes(this)">
                             {% for cat in categorias %}
                                 <option value="{{ cat }}" {% if cat == r['categoria'] %}selected{% endif %}>
                                     {{ cat }}
                                 </option>
                             {% endfor %}
                         </select>
+
+                        <!-- Opções que aparecem quando muda categoria -->
+                        <div class="opcoes-categoria" style="display:none; margin-top:0.5rem;">
+                            <label style="font-size:0.85rem;">
+                                <input type="checkbox" name="aplicar_todas" value="1">
+                                Aplicar em todas iguais
+                            </label>
+                            <button type="submit" class="btn-pequeno">Salvar</button>
+                        </div>
                     </form>
                 </td>
             </tr>
@@ -42,4 +52,70 @@
         </tbody>
     </table>
 </div>
+
+<script>
+function mostrarOpcoes(select) {
+    const form = select.closest('.form-categoria');
+    const opcoes = form.querySelector('.opcoes-categoria');
+    const valorOriginal = select.dataset.original || select.value;
+
+    // Salva valor original na primeira vez
+    if (!select.dataset.original) {
+        select.dataset.original = valorOriginal;
+    }
+
+    // Se mudou, mostra opções
+    if (select.value !== valorOriginal) {
+        opcoes.style.display = 'block';
+    } else {
+        opcoes.style.display = 'none';
+    }
+}
+
+// Quando a página carrega, salva o valor original de cada select
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.form-categoria select').forEach(select => {
+        select.dataset.original = select.value;
+    });
+});
+</script>
+
+<style>
+.form-categoria {
+    display: flex;
+    flex-direction: column;
+}
+
+.opcoes-categoria {
+    padding: 0.5rem;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.opcoes-categoria label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: normal;
+}
+
+.btn-pequeno {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-pequeno:hover {
+    background: #0056b3;
+}
+</style>
+
 {% endblock %}
