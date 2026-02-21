@@ -12,8 +12,7 @@ from flask_login import (
 
 from services.conta_service import ContaService
 from infrastructure.database import criar_tabelas
-from repositories.repository import UsuarioRepository, ContaRepository
-
+from repositories.repository import UsuarioRepository, ContaRepository, InvestimentoRepository
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -25,6 +24,7 @@ def create_app() -> Flask:
     usuario_repo = UsuarioRepository()
     conta_repo = ContaRepository()
     conta_service = ContaService(conta_repo)
+    investimento_repo = InvestimentoRepository()
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -155,8 +155,35 @@ def create_app() -> Flask:
 
         return redirect(url_for('transacoes'))
 
-    return app
+    @app.route('/investimentos')
+    @login_required
+    def investimentos():
+        dados = investimento_repo.buscar_por_usuario(current_user.id)
+        return render_template('investimentos.html', investimentos=dados)
 
+    @app.route('/investimentos/salvar', methods=['POST'])
+    @login_required
+    def salvar_investimento():
+        papel = request.form.get('papel')
+        saldo = request.form.get('saldo')
+        descricao = request.form.get('descricao', 'Sem descrição')
+
+        if not papel or not saldo:
+            flash('Preencha todos os campos obrigatórios.', 'erro')
+            return redirect(url_for('investimentos'))
+
+        investimento_repo.salvar(current_user.id, float(saldo), papel, descricao)
+        flash('Investimento salvo com sucesso!', 'sucesso')
+        return redirect(url_for('investimentos'))
+
+    @app.route('/investimentos/remover/<int:investimento_id>', methods=['POST'])
+    @login_required
+    def remover_investimento(investimento_id):
+        investimento_repo.remover(investimento_id, current_user.id)
+        flash('Investimento removido.', 'sucesso')
+        return redirect(url_for('investimentos'))
+
+    return app
 
 if __name__ == '__main__':
     app = create_app()

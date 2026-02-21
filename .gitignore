@@ -15,6 +15,7 @@ env/
 # Excel files locais
 # =========================
 *.xlsx
+*.txt
 
 # =========================
 # Python cache

@@ -2,7 +2,7 @@
 {% block content %}
 <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-        <h2>Dashboard — {{ current_user.nome }}</h2>
+        <h2>Controle de gastos — {{ current_user.nome }}</h2>
         {% if not vazio %}
             <a href="/importar"><button type="button">📂 Importar novo extrato</button></a>
         {% endif %}
@@ -40,6 +40,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <canvas id="grafico"></canvas>
 
     <script>
@@ -56,12 +57,40 @@
             data: {
                 labels: dados.meses,
                 datasets: [
-                    { label: 'Crédito', data: dados.creditos, backgroundColor: '#4CAF50' },
-                    { label: 'Débito',  data: dados.debitos,  backgroundColor: '#f44336' },
-                    { label: 'Saldo',   data: dados.saldos,   backgroundColor: '#2196F3', type: 'line' }
+                    {
+                        label: 'Crédito',
+                        data: dados.creditos,
+                        backgroundColor: '#4CAF50',
+                        datalabels: { color: '#ffffff' }
+                    },
+                    {
+                        label: 'Débito',
+                        data: dados.debitos,
+                        backgroundColor: '#f44336',
+                        datalabels: { color: '#ffffff' }
+                    },
                 ]
             },
-            options: { responsive: true, plugins: { legend: { position: 'top' } } }
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: {
+                        display: true,
+                        text: 'Movimentações Mensais',
+                        font: { size: 16 },
+                        padding: { bottom: 20 }
+                    },
+                    datalabels: {
+                        anchor: 'center',
+                        align: 'center',
+                        formatter: (value) => `R$ ${value.toFixed(2)}`,
+                        font: { size: 11, weight: 'bold' },
+                        color: '#ffffff'
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
         });
 
         function filtrar() {

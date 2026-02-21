@@ -160,3 +160,49 @@ class ContaRepository:
         conn.commit()
         conn.close()
         return qtd_atualizada
+
+class InvestimentoRepository:
+
+    def buscar_por_usuario(self, usuario_id):
+        conn = get_connection()
+        rows = conn.execute("""
+            SELECT id, usuario_id, saldo, descricao
+            FROM investimentos
+            WHERE usuario_id = ?
+        """, (usuario_id,)).fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+
+    def salvar(self, usuario_id, saldo, papel, descricao='Sem descrição'):
+        conn = get_connection()
+        conn.execute("""
+            INSERT INTO investimentos (usuario_id, saldo, descricao)
+            VALUES (?, ?, ?)
+            ON CONFLICT(usuario_id) DO UPDATE SET
+                saldo = excluded.saldo,
+                descricao = excluded.descricao
+        """,
+        (usuario_id, saldo, descricao))
+        conn.commit()
+        conn.close()
+
+    def buscar_por_usuario(self, usuario_id):
+        conn = get_connection()
+        rows = conn.execute("""
+            SELECT id, usuario_id, saldo, descricao
+            FROM investimentos
+            WHERE usuario_id = ?
+            """,
+        (usuario_id,)).fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+
+    def remover(self, investimento_id, usuario_id):
+        conn = get_connection()
+        conn.execute("""
+            DELETE FROM investimentos
+            WHERE id = ? AND usuario_id = ?
+            """,
+        (investimento_id, usuario_id))
+        conn.commit()
+        conn.close()

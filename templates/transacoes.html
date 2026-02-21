@@ -6,6 +6,22 @@
         <a href="/"><button type="button">← Dashboard</button></a>
     </div>
 
+    <!-- FILTRO DE MÊS -->
+    <div class="filtro" style="margin-bottom:1.5rem;">
+        <label>Filtrar por mês:</label>
+        <select id="filtroMes" onchange="filtrarMes()">
+            <option value="todos">Todos</option>
+            {% set meses_vistos = [] %}
+            {% for r in registros %}
+                {% set mes = r['data'][:7] %}
+                {% if mes not in meses_vistos %}
+                    {% set _ = meses_vistos.append(mes) %}
+                    <option value="{{ mes }}">{{ mes }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </div>
+
     <table class="tabela">
         <thead>
             <tr>
@@ -17,9 +33,9 @@
                 <th>Categoria</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="corpoTabela">
             {% for r in registros %}
-            <tr>
+            <tr data-mes="{{ r['data'][:7] }}">
                 <td>{{ r['data'] }}</td>
                 <td>{{ r['tipo'] }}</td>
                 <td>{{ r['detalhe'] }}</td>
@@ -37,7 +53,6 @@
                             {% endfor %}
                         </select>
 
-                        <!-- Opções que aparecem quando muda categoria -->
                         <div class="opcoes-categoria" style="display:none; margin-top:0.5rem;">
                             <label style="font-size:0.85rem;">
                                 <input type="checkbox" name="aplicar_todas" value="1">
@@ -54,25 +69,24 @@
 </div>
 
 <script>
+function filtrarMes() {
+    const mes = document.getElementById('filtroMes').value;
+    document.querySelectorAll('#corpoTabela tr').forEach(tr => {
+        tr.style.display = (mes === 'todos' || tr.dataset.mes === mes) ? '' : 'none';
+    });
+}
+
 function mostrarOpcoes(select) {
     const form = select.closest('.form-categoria');
     const opcoes = form.querySelector('.opcoes-categoria');
-    const valorOriginal = select.dataset.original || select.value;
 
-    // Salva valor original na primeira vez
     if (!select.dataset.original) {
-        select.dataset.original = valorOriginal;
+        select.dataset.original = select.value;
     }
 
-    // Se mudou, mostra opções
-    if (select.value !== valorOriginal) {
-        opcoes.style.display = 'block';
-    } else {
-        opcoes.style.display = 'none';
-    }
+    opcoes.style.display = select.value !== select.dataset.original ? 'block' : 'none';
 }
 
-// Quando a página carrega, salva o valor original de cada select
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.form-categoria select').forEach(select => {
         select.dataset.original = select.value;

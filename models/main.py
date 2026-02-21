@@ -8,6 +8,9 @@ class Conta:
         self.numero = numero
         self.saldos_mensais = pd.DataFrame()
 
+        if self.nome is not None and not isinstance(self.nome, str):
+            raise TypeError("nome deve ser uma string")
+
     @staticmethod
     def validar_numero(numero: str) -> bool:
         return bool(re.fullmatch(r'\d{7}-\d', numero))

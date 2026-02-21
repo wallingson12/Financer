@@ -45,4 +45,17 @@ def criar_tabelas():
         )
     """)
     conn.commit()
+
+    # Tabela de Investimentos
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS investimentos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL UNIQUE,         -- Referência ao usuário dono do investimento
+            saldo REAL NOT NULL DEFAULT 0.0,            -- Saldo total: soma de créditos - débitos
+            descricao TEXT DEFAULT 'Sem descrição',     -- Descrição do papel/investimento
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        )
+    """)
+    conn.commit()
     conn.close()

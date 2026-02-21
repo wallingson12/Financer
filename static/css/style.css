@@ -194,3 +194,17 @@ button:hover {
     align-items: center;
     gap: 1rem;
 }
+
+.btn-remover {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+    background: #e53935;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-remover:hover {
+    background: #b71c1c;
+}
