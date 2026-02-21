@@ -15,18 +15,18 @@ Permite:
 
 ```
 Financer/
-├── app.py                    # Ponto de entrada da aplicação Flask
-├── models/                   # Modelos de domínio
-│   ├── main.py              # Classe Conta (regras de cálculo de saldo)
-│   └── usuario.py           # Modelo Usuario integrado ao flask_login
-├── repositories/             # Acesso a dados
-│   └── repository.py        # UsuarioRepository e ContaRepository
-├── services/                # Camada de serviços
-│   └── conta_service.py     # ContaService (orquestração de regras de negócio)
-├── infrastructure/           # Infraestrutura e utilitários
-│   ├── database.py          # Conexão e criação das tabelas SQLite
-│   └── loader.py            # Leitura e normalização do arquivo Excel
-├── templates/                # Templates HTML (Jinja2)
+├── app.py
+├── models/
+│   ├── main.py
+│   └── usuario.py
+├── repositories/
+│   └── repository.py
+├── services/
+│   └── conta_service.py
+├── infrastructure/
+│   ├── database.py
+│   └── loader.py
+├── templates/
 │   ├── base.html
 │   ├── dashboard.html
 │   ├── transacoes.html
