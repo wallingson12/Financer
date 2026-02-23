@@ -1,0 +1,34 @@
+Segurança e infraestrutura (obrigatório)
+
+Migrar de SQLite para PostgreSQL ou MySQL
+Variáveis de ambiente para todas as configs sensíveis
+HTTPS obrigatório
+Rate limiting nas rotas de login para evitar brute force
+Validação e sanitização mais robusta nos formulários
+
+Autenticação
+
+Recuperação de senha por e-mail
+Verificação de e-mail no cadastro
+Opção de autenticação com Google/GitHub (OAuth)
+Sessões com expiração configurável
+
+Produto
+
+Suporte a outros formatos de extrato além de .xlsx (OFX, CSV, PDF)
+Exportação de relatórios em PDF
+Gráficos mais ricos — por categoria, evolução patrimonial
+Módulo de metas financeiras
+Notificações de gastos acima do esperado
+
+Escalabilidade
+
+Separar frontend e backend (API REST + React/Vue)
+Containerizar com Docker
+Deploy em nuvem (Railway, Render, AWS)
+Testes automatizados antes de qualquer deploy
+
+Modelo de negócio
+
+Plano gratuito com limite de transações
+Plano pago com histórico ilimitado, exportações e múltiplas contas
