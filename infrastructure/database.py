@@ -15,7 +15,8 @@ def criar_tabelas():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
             numero TEXT NOT NULL,
-            senha_hash TEXT NOT NULL
+            senha_hash TEXT NOT NULL,
+            tipo TEXT NOT NULL DEFAULT 'pessoal'
         )
     """)
     # Tabela de transações (sem UNIQUE para permitir importações livres)

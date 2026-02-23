@@ -5,11 +5,11 @@ import pandas as pd
 
 
 class UsuarioRepository:
-    def criar(self, nome, numero, senha):
+    def criar(self, nome, numero, senha, tipo='pessoal'):
         conn = get_connection()
         conn.execute(
-            "INSERT INTO usuarios (nome, numero, senha_hash) VALUES (?, ?, ?)",
-            (nome, numero, generate_password_hash(senha))
+            "INSERT INTO usuarios (nome, numero, senha_hash, tipo) VALUES (?, ?, ?, ?)",
+            (nome, numero, generate_password_hash(senha), tipo)
         )
         conn.commit()
         conn.close()
@@ -21,7 +21,7 @@ class UsuarioRepository:
         ).fetchone()
         conn.close()
         if row:
-            return Usuario(row['id'], row['nome'], row['numero'], row['senha_hash'])
+            return Usuario(row['id'], row['nome'], row['numero'], row['senha_hash'], row['tipo'])
         return None
 
     def buscar_por_id(self, id):
@@ -31,7 +31,7 @@ class UsuarioRepository:
         ).fetchone()
         conn.close()
         if row:
-            return Usuario(row['id'], row['nome'], row['numero'], row['senha_hash'])
+            return Usuario(row['id'], row['nome'], row['numero'], row['senha_hash'], row['tipo'])
         return None
 
 
