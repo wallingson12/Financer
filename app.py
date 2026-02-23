@@ -11,8 +11,10 @@ from flask_login import (
 )
 
 from services.conta_service import ContaService
+from services.alerta_service import AlertaService
 from infrastructure.database import criar_tabelas
 from repositories.repository import UsuarioRepository, ContaRepository, InvestimentoRepository
+
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -25,6 +27,7 @@ def create_app() -> Flask:
     conta_repo = ContaRepository()
     conta_service = ContaService(conta_repo)
     investimento_repo = InvestimentoRepository()
+    alerta_service = AlertaService()
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -36,6 +39,7 @@ def create_app() -> Flask:
             nome = request.form.get('nome')
             numero = request.form.get('numero')
             senha = request.form.get('senha')
+            tipo = request.form.get('tipo', 'pessoal')
 
             if not re.match(r'^\d{7}-\d{1}$', numero):
                 flash('Número de conta inválido! Use o formato: 1234567-8', 'erro')
@@ -45,7 +49,7 @@ def create_app() -> Flask:
                 flash('Número de conta já cadastrado!', 'erro')
                 return redirect(url_for('registro'))
 
-            usuario_repo.criar(nome, numero, senha)
+            usuario_repo.criar(nome, numero, senha, tipo)
             flash('Conta criada com sucesso! Faça login.', 'sucesso')
             return redirect(url_for('login'))
 
@@ -77,10 +81,15 @@ def create_app() -> Flask:
     def index():
         saldos = conta_repo.buscar_saldos_mensais(current_user.id)
 
+        alerta = None
+        if current_user.tipo == 'mei':
+            total_anual = conta_repo.buscar_total_anual(current_user.id)
+            alerta = alerta_service.verificar_limite_mei(total_anual)
+
         if not saldos:
             return render_template(
                 'dashboard.html',
-                meses=[], creditos=[], debitos=[], saldos=[], vazio=True
+                meses=[], creditos=[], debitos=[], saldos=[], vazio=True, alerta=alerta
             )
 
         meses = [row['mes'] for row in saldos]
@@ -90,7 +99,7 @@ def create_app() -> Flask:
 
         return render_template(
             'dashboard.html',
-            meses=meses, creditos=creditos, debitos=debitos, saldos=saldos_v, vazio=False
+            meses=meses, creditos=creditos, debitos=debitos, saldos=saldos_v, vazio=False, alerta=alerta
         )
 
     @app.route('/importar')
@@ -111,7 +120,7 @@ def create_app() -> Flask:
 
         return render_template(
             'dashboard.html',
-            meses=meses, saldos=saldos, creditos=creditos, debitos=debitos, vazio=False
+            meses=meses, saldos=saldos, creditos=creditos, debitos=debitos, vazio=False, alerta=None
         )
 
     CATEGORIAS = [
@@ -134,11 +143,9 @@ def create_app() -> Flask:
         usuario_id = current_user.id
 
         if aplicar_todas == '1':
-            # Busca a transação para pegar tipo/detalhe
             transacao = conta_repo.buscar_transacao_por_id(transacao_id, usuario_id)
 
             if transacao:
-                # Atualiza todas iguais
                 qtd = conta_repo.atualizar_categoria_em_lote(
                     transacao['tipo'],
                     transacao['detalhe'],
@@ -149,7 +156,6 @@ def create_app() -> Flask:
             else:
                 flash('❌ Transação não encontrada', 'error')
         else:
-            # Atualiza só essa transação
             conta_repo.atualizar_categoria(transacao_id, categoria, usuario_id)
             flash(f'✅ Transação categorizada como "{categoria}"!', 'success')
 
@@ -184,6 +190,7 @@ def create_app() -> Flask:
         return redirect(url_for('investimentos'))
 
     return app
+
 
 if __name__ == '__main__':
     app = create_app()

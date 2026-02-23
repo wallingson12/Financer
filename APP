@@ -1,0 +1,168 @@
+# 📱 Financer App — Roadmap de Evolução
+
+---
+
+# 🔥 FASE 1 — Refinamento Visual (Impacto Imediato)
+
+## 🎯 Objetivo
+Melhorar legibilidade, consistência visual e percepção de qualidade.
+
+---
+
+## 1️⃣ Formatar Datas
+- Converter `2026-01` → `Jan 2026`
+- Melhorar legibilidade
+- Criar util: `formatarMes()`
+
+---
+
+## 2️⃣ Formatar Moeda (pt-BR)
+- Usar `toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })`
+- Exibir `R$ 4.147,20`
+- Criar util: `formatarMoeda()`
+
+---
+
+## 3️⃣ Cor Dinâmica no Saldo
+- 🟢 Verde se positivo
+- 🔴 Vermelho se negativo
+- Aplicar regra visual consistente
+
+---
+
+## 4️⃣ Melhorar Contraste de Texto
+- Débito: vermelho mais suave
+- Crédito: verde consistente
+- Saldo: azul ajustado para melhor leitura
+
+---
+
+# 🚀 FASE 2 — Aparência Premium
+
+## 🎯 Objetivo
+Elevar o visual para padrão fintech.
+
+---
+
+## 5️⃣ Aumentar BorderRadius
+- De `8` → `16`
+
+---
+
+## 6️⃣ Adicionar Sombra Realista
+- `elevation` (Android)
+- `shadowColor` + `shadowOpacity` (iOS)
+
+---
+
+## 7️⃣ Melhorar Espaçamento
+- Padding interno mais equilibrado
+- Margem entre cards ajustada
+
+---
+
+## 8️⃣ Melhorar Card "Saldo Total"
+- Adicionar ícone 💰
+- Aplicar gradiente mais suave
+- Aumentar tamanho do valor principal
+
+---
+
+# 💎 FASE 3 — Nível App Bancário
+
+## 🎯 Objetivo
+Adicionar inteligência visual e interação moderna.
+
+---
+
+## 9️⃣ Adicionar Gráfico Mensal
+- Gráfico de linha **ou**
+- Gráfico de barras
+- Visualizar evolução financeira
+
+---
+
+## 🔟 Animações Suaves
+- Fade-in nos cards
+- Animação ao atualizar dados
+
+---
+
+## 11️⃣ Resumo Geral no Topo
+- Total de crédito anual
+- Total de débito anual
+- Percentual de economia
+
+---
+
+## 12️⃣ Pull to Refresh
+- Atualização ao arrastar
+- Melhor experiência de uso
+
+---
+
+# 🧠 FASE 4 — Organização de Código
+
+## 13️⃣ Criar Pasta `/components`
+Separar:
+
+- `CardResumo.js`
+- `CardMes.js`
+- `SaldoHeader.js`
+
+---
+
+## 14️⃣ Criar `/utils/formatters.js`
+Incluir:
+
+- `formatarMoeda`
+- `formatarMes`
+
+---
+
+# 🏗️ FASE 5 — Evolução Funcional
+
+## 15️⃣ Tela de Detalhes do Mês
+- Ao clicar no card → abrir transações daquele mês
+
+---
+
+## 16️⃣ Filtro por Período
+- Últimos 3 meses
+- Últimos 6 meses
+- Ano atual
+
+---
+
+## 17️⃣ Modo Escuro Automático
+
+---
+
+## 18️⃣ Autenticação Persistente
+- Manter login salvo
+- Implementar refresh token
+
+---
+
+# 🎯 FASE 6 — Evolução de Produto
+
+## 19️⃣ Tela de Metas Financeiras
+- Meta de economia mensal
+- Indicador de progresso
+
+---
+
+## 20️⃣ Tela de Alertas Inteligentes
+- Avisar quando gasto > média
+- Alertas personalizados
+
+---
+
+# 📌 Prioridade Recomendada de Execução
+
+1. Fase 1
+2. Fase 2
+3. Fase 4 (organização)
+4. Fase 3
+5. Fase 5
+6. Fase 6

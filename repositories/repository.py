@@ -57,7 +57,6 @@ class ContaRepository:
     def salvar_saldos_mensais(self, conta, usuario_id):
         conn = get_connection()
 
-        # Busca todas as transações do usuário
         df = pd.DataFrame(conn.execute("""
             SELECT data, credito, debito FROM transacoes
             WHERE usuario_id = ?
@@ -77,10 +76,8 @@ class ContaRepository:
 
         saldos['saldo'] = saldos['total_credito'] - saldos['total_debito']
 
-        # Limpa saldos antigos do usuário
         conn.execute("DELETE FROM saldos_mensais WHERE usuario_id = ?", (usuario_id,))
 
-        # Insere os saldos atualizados
         for _, row in saldos.iterrows():
             conn.execute("""
                 INSERT INTO saldos_mensais (usuario_id, mes, total_credito, total_debito, saldo)
@@ -111,6 +108,19 @@ class ContaRepository:
             for r in rows
         ]
 
+    def buscar_total_anual(self, usuario_id):
+        """Busca total de créditos do ano atual para cálculo do limite MEI"""
+        conn = get_connection()
+        row = conn.execute("""
+            SELECT COALESCE(SUM(credito), 0) as total
+            FROM transacoes
+            WHERE usuario_id = ?
+              AND strftime('%Y', data) = strftime('%Y', 'now')
+              AND categoria = 'Receita'
+        """, (usuario_id,)).fetchone()
+        conn.close()
+        return row['total']
+
     def buscar_transacoes(self, usuario_id):
         """Busca transações e retorna lista de dicionários"""
         conn = get_connection()
@@ -121,8 +131,6 @@ class ContaRepository:
             ORDER BY data DESC
         """, (usuario_id,)).fetchall()
         conn.close()
-
-        # Retorna lista de dicionários
         return [dict(row) for row in rows]
 
     def buscar_transacao_por_id(self, transacao_id, usuario_id):
@@ -161,9 +169,11 @@ class ContaRepository:
         conn.close()
         return qtd_atualizada
 
+
 class InvestimentoRepository:
 
     def buscar_por_usuario(self, usuario_id):
+        """Busca investimentos do usuário"""
         conn = get_connection()
         rows = conn.execute("""
             SELECT id, usuario_id, saldo, descricao
@@ -174,6 +184,7 @@ class InvestimentoRepository:
         return [dict(row) for row in rows]
 
     def salvar(self, usuario_id, saldo, papel, descricao='Sem descrição'):
+        """Insere ou atualiza investimento do usuário"""
         conn = get_connection()
         conn.execute("""
             INSERT INTO investimentos (usuario_id, saldo, descricao)
@@ -181,28 +192,16 @@ class InvestimentoRepository:
             ON CONFLICT(usuario_id) DO UPDATE SET
                 saldo = excluded.saldo,
                 descricao = excluded.descricao
-        """,
-        (usuario_id, saldo, descricao))
+        """, (usuario_id, saldo, descricao))
         conn.commit()
         conn.close()
 
-    def buscar_por_usuario(self, usuario_id):
-        conn = get_connection()
-        rows = conn.execute("""
-            SELECT id, usuario_id, saldo, descricao
-            FROM investimentos
-            WHERE usuario_id = ?
-            """,
-        (usuario_id,)).fetchall()
-        conn.close()
-        return [dict(row) for row in rows]
-
     def remover(self, investimento_id, usuario_id):
+        """Remove investimento do usuário"""
         conn = get_connection()
         conn.execute("""
             DELETE FROM investimentos
             WHERE id = ? AND usuario_id = ?
-            """,
-        (investimento_id, usuario_id))
+        """, (investimento_id, usuario_id))
         conn.commit()
         conn.close()

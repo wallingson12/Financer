@@ -8,6 +8,10 @@
         {% endif %}
     </div>
 
+    {% if alerta %}
+        <div class="flash erro">{{ alerta }}</div>
+    {% endif %}
+
     {% if vazio %}
     <div class="vazio">
         <p>📂 Nenhum extrato importado ainda.</p>
@@ -68,7 +72,7 @@
                         data: dados.debitos,
                         backgroundColor: '#f44336',
                         datalabels: { color: '#ffffff' }
-                    },
+                    }
                 ]
             },
             options: {
@@ -113,7 +117,6 @@
             grafico.data.labels           = labels;
             grafico.data.datasets[0].data = creditos;
             grafico.data.datasets[1].data = debitos;
-            grafico.data.datasets[2].data = saldos;
             grafico.update();
 
             const sumCredito = creditos.reduce((a, b) => a + b, 0);
