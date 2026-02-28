@@ -13,11 +13,15 @@ df_transacoes = pd.read_sql_query("SELECT * FROM transacoes", conn)
 # Ler tabela de saldos mensais
 df_saldos = pd.read_sql_query("SELECT * FROM saldos_mensais", conn)
 
+df_user = pd.read_sql_query("SELECT * FROM usuarios", conn)
+
 # Mostrar
 print("Transações:")
 print(df_transacoes)
 
 print("\nSaldos mensais:")
 print(df_saldos)
+
+print(df_user)
 
 conn.close()

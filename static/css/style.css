@@ -124,10 +124,24 @@ button:hover {
 
 .flash {
     background: #fff3cd;
+    border: 1px solid #ffc107;
+    color: #856404;
     padding: 0.5rem 1rem;
     border-radius: 6px;
     margin-bottom: 1rem;
     font-size: 0.9rem;
+}
+
+.flash.erro {
+    background: #ffebee;
+    border: 1px solid #f44336;
+    color: #c62828;
+}
+
+.flash.sucesso {
+    background: #e8f5e9;
+    border: 1px solid #4CAF50;
+    color: #2e7d32;
 }
 
 .link {
@@ -209,24 +223,78 @@ button:hover {
     background: #b71c1c;
 }
 
-.flash {
-    background: #fff3cd;
-    border: 1px solid #ffc107;
-    color: #856404;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
+.orientacoes-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.page-title {
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+    color: #1a1a2e;
+}
+
+.page-subtitle {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 2rem;
+}
+
+.section-block {
+    margin-bottom: 2rem;
+}
+
+.section-block h2 {
+    font-size: 1.1rem;
+    color: #1a1a2e;
     margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #eee;
+}
+
+.card.aviso {
+    background: #fff8e1;
+    border-left: 4px solid #f59e0b;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: none;
+}
+
+.card.dica {
+    background: #e8f5e9;
+    border-left: 4px solid #4CAF50;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: none;
+}
+
+.card.aviso > strong,
+.card.dica > strong {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: #333;
+}
+
+.links-uteis {
+    list-style: none;
+    padding: 0;
+}
+
+.links-uteis li {
+    margin-bottom: 0.5rem;
+}
+
+.links-uteis li a {
+    color: #1a1a2e;
+    font-weight: 600;
+    text-decoration: none;
     font-size: 0.9rem;
 }
 
-.flash.erro {
-    background: #ffebee;
-    border: 1px solid #f44336;
-    color: #c62828;
-}
-
-.flash.sucesso {
-    background: #e8f5e9;
-    border: 1px solid #4CAF50;
-    color: #2e7d32;
+.links-uteis li a:hover {
+    text-decoration: underline;
 }

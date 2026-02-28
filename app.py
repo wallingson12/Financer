@@ -167,6 +167,13 @@ def create_app() -> Flask:
         dados = investimento_repo.buscar_por_usuario(current_user.id)
         return render_template('investimentos.html', investimentos=dados)
 
+    @app.route('/avisos')
+    @login_required
+    def orientacoes():
+        if current_user.tipo != 'mei':
+            return redirect(url_for('index'))
+        return render_template('avisos.html')
+
     @app.route('/investimentos/salvar', methods=['POST'])
     @login_required
     def salvar_investimento():

@@ -40,3 +40,7 @@ __pycache__/
 .DS_Store
 Thumbs.db
 Task
+
+node_modules/
+package.json
+package-lock.json

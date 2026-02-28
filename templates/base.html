@@ -16,6 +16,9 @@
                 <a href="/transacoes">Transações</a>
                 <a href="/investimentos">Investimentos</a>
                 <a href="/importar">Importar</a>
+                {% if current_user.tipo == 'mei' %}
+                    <a href="/avisos">Orientações</a>
+                {% endif %}
                 <span>Olá, {{ current_user.nome }}</span>
                 <a href="/logout" class="btn-logout">Sair</a>
             </nav>
