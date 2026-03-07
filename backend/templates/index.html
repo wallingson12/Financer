@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Importar Extrato</h2>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label>Arquivo Excel (.xlsx)</label>
+            <input type="file" name="extrato" accept=".xlsx" required>
+        </div>
+        <button type="submit">Analisar</button>
+    </form>
+</div>
+{% endblock %}
