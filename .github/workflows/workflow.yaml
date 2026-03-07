@@ -3,7 +3,11 @@ name: workflow CI
 
 # Define quando o workflow roda
 # push, pull_request, branches
-on: push
+on:
+  push:
+    branches: [teste]
+  pull_request:
+    branches: [main]
 
 # Define os trabalhos que serão executados
 # Pode ter vários jobs
@@ -29,4 +33,4 @@ jobs:
 
       - name: Rodar script
         # run: python main.py
-        run: python main.py
+        run: python app_api.py
