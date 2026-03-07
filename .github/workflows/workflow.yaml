@@ -33,4 +33,4 @@ jobs:
 
       - name: Rodar script
         # run: python main.py
-        run: python app_api.py
+        run: pytest
