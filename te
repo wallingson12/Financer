@@ -1,0 +1,169 @@
+[33mcommit 646c4ec3ce876b8b7038cbc9b9f7b0ef6e8a6d99[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Mar 7 18:59:10 2026 -0300
+
+    ajustando organização
+
+[33mcommit 3a9f063ec9f2402498096bb73df168e250ff2d74[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mteste[m[33m, [m[1;31morigin/teste[m[33m)[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Mar 7 11:06:29 2026 -0300
+
+    debug false
+
+[33mcommit c813afa67506e49cd2af70b8cb08ea26c3eda536[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Mar 7 10:42:56 2026 -0300
+
+    fix tests
+
+[33mcommit 17bafe9087df614530f8321d22297b0aa742eb3b[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Mar 7 10:30:46 2026 -0300
+
+    Aplicando CI
+
+[33mcommit fec3ae069ca26fa9d9e6ed963006e1a77a4165c1[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Mar 7 10:27:20 2026 -0300
+
+    Aplicando CI
+
+[33mcommit 78cbb63339e949177fbce990d95582a806690b42[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Mar 7 10:21:33 2026 -0300
+
+    add flask-jwt-extended dependency
+
+[33mcommit 4a49c9ba73d54f7953fcc8e116bb2832c5c16bf4[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Mar 7 10:18:03 2026 -0300
+
+    fix: corrigir dependencias do requirements
+
+[33mcommit 0c30923626d809ca6e799c2c74d281863f179eb2[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Mar 7 10:15:01 2026 -0300
+
+    adicionando requirements
+
+[33mcommit e7580f58103799c5e405841e3b392fdfdd22b140[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Mar 7 10:12:10 2026 -0300
+
+    rerun CI
+
+[33mcommit 88171e176398d84b7c581935cc21888cf4015493[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Mar 7 10:08:52 2026 -0300
+
+    adicionando requirements
+
+[33mcommit f44344047e2b408676d59de1ab5815ef18795468[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Mar 7 10:03:59 2026 -0300
+
+    adicionando requirements
+
+[33mcommit 9dcb32952eb5269adc8c065db31e3f54c77dfac3[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Mar 7 09:56:44 2026 -0300
+
+    adicionando CI com GitHub Actions
+
+[33mcommit 0c5aaa743212cabed3650dbbb8dc7204ad5a29de[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Mar 7 09:46:17 2026 -0300
+
+    implementando a versão app mobile
+
+[33mcommit 5c372dfd2a310226ac11fa5228cd625addd86463[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Fri Feb 27 21:06:00 2026 -0300
+
+    Adicionando tela do MEI
+
+[33mcommit 53fef752c62280f764bcf6fe9b933a501838ce1a[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Mon Feb 23 20:08:08 2026 -0300
+
+    feat: adiciona tipo de usuário e alerta de limite MEI
+
+[33mcommit f7c40db92cb3f4a419de442951f1b0051098bac7[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Mon Feb 23 19:16:21 2026 -0300
+
+    chore: ignora arquivo Task
+
+[33mcommit 47cc973ec19d752e63054523e2fac449a97cfd85[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Mon Feb 23 19:14:46 2026 -0300
+
+    resolve conflito Task
+
+[33mcommit 95b5f35145e8a6f125f8babce2bf2e26a1b8f42b[m
+Merge: 804bb5e 323f15e
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Mon Feb 23 19:10:23 2026 -0300
+
+    Merge branch 'main' of https://github.com/wallingson12/Financer
+
+[33mcommit 804bb5eb6bafa102f852e2cecc72f6fe2ce0a0e6[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Mon Feb 23 19:07:20 2026 -0300
+
+    feat: adiciona tipo de usuario (pessoal/mei)
+
+[33mcommit 323f15ee4fa34c55624b15a0b12310842b35eef0[m
+Author: wallingson <128642980+wallingson12@users.noreply.github.com>
+Date:   Sat Feb 21 11:09:53 2026 -0300
+
+    Update README.md
+
+[33mcommit 08b7a8dfab2cbeebd15e11322f4a4510001de3d6[m
+Author: wallingson <128642980+wallingson12@users.noreply.github.com>
+Date:   Sat Feb 21 11:07:24 2026 -0300
+
+    Update README.md
+
+[33mcommit 70940a21e609011d03c1d1a8f08313f4500a20cb[m
+Author: wallingson <128642980+wallingson12@users.noreply.github.com>
+Date:   Sat Feb 21 11:03:28 2026 -0300
+
+    Delete Task
+
+[33mcommit 3a2c5db38405ca19accbea84268ea8e77180cd6c[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Sat Feb 21 11:02:05 2026 -0300
+
+    Criei a classe InvestimentoRepository, sua tabela e metodos CRUD
+
+[33mcommit 89a3045cf14985be653ff8779cbee78c017aa428[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Thu Feb 19 00:31:46 2026 -0300
+
+    corrigindo saldo no dash
+
+[33mcommit 1b90732539981efceee188d0a93cbb040c343a57[m
+Merge: fbc1dd6 08d850f
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Wed Feb 18 13:24:24 2026 -0300
+
+    Merge branch 'main' of https://github.com/wallingson12/Financer
+
+[33mcommit fbc1dd6ef17f6fd9f40e0d42aa43dbf6ddfab509[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Wed Feb 18 13:23:19 2026 -0300
+
+    ajustando current user e adicionandop testes
+
+[33mcommit 08d850f58cfd16f138ed5e74ff22adb313fd3ce8[m
+Author: wallingson <128642980+wallingson12@users.noreply.github.com>
+Date:   Tue Feb 17 17:30:08 2026 -0300
+
+    Criando readme para melhor entendimento
+
+[33mcommit 8a26386f5a9dd6f3265c984b2e2ff9511ee8a31e[m
+Author: wallingson12 <wallingson12@yahoo.com.br>
+Date:   Tue Feb 17 17:22:10 2026 -0300
+
+    Primeiro commit
