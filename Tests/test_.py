@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import pandas as pd
 import pytest
 import io
-from models.main import Conta
+from backend.models.main import Conta
 
 # -------------------------------------------------
 # Função auxiliar para criar dados
