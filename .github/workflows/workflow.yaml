@@ -33,4 +33,4 @@ jobs:
 
       - name: Rodar script
         # run: python main.py
-        run: PYTHONPATH=. pytest
+        run: PYTHONPATH=backend pytest
