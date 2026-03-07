@@ -12,9 +12,32 @@ import ImportarScreen from './screens/ImportarScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+import { Ionicons } from '@expo/vector-icons';
+
 function AppTabs({ token }) {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ color, size, focused }) => {
+          let iconName;
+
+          if (route.name === "Dashboard") {
+            iconName = focused ? "home" : "home-outline";
+          } else if (route.name === "Transações") {
+            iconName = focused ? "list" : "list-outline";
+          } else if (route.name === "Investimentos") {
+            iconName = focused ? "cash" : "cash-outline";
+          } else if (route.name === "Importar") {
+            iconName = focused ? "cloud-upload" : "cloud-upload-outline";
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: "#6366F1",
+        tabBarInactiveTintColor: "gray",
+      })}
+    >
       <Tab.Screen name="Dashboard">
         {props => <DashboardScreen {...props} token={token} />}
       </Tab.Screen>

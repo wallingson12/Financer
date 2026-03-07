@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const API = 'http://192.168.1.33:5000';
+import API from '../services/api';
 
 export default function DashboardScreen({ token }) {
   const [saldos, setSaldos] = useState([]);
@@ -24,7 +24,7 @@ export default function DashboardScreen({ token }) {
         });
 
         const data = await res.json();
-        console.log("DADOS RECEBIDOS:", data);
+//        console.log("DADOS RECEBIDOS:", data);
 
         let lista = [];
 

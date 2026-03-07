@@ -21,7 +21,5 @@ class ExcelLoader():
 
         dados[['Tipo', 'Detalhe']] = dados['Descrição'].str.split(r'\s{2,}', n=1, expand=True)
         dados['Detalhe'] = dados['Detalhe'].fillna('')
-        print(dados[['Data', 'Tipo', 'Detalhe', 'Crédito (R$)', 'Débito (R$)']])
-        print("Linhas totais:", len(dados))
 
         return dados

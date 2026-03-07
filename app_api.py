@@ -39,6 +39,7 @@ def create_app() -> Flask:
     usuario_repo = UsuarioRepository()
     conta_repo = ContaRepository()
     investimento_repo = InvestimentoRepository()
+    # implementar upload para react_native
     conta_service = ContaService(conta_repo)
 
     # ===============================
@@ -93,6 +94,31 @@ def create_app() -> Flask:
             })
 
         return jsonify({"erro": "Número ou senha incorretos."}), 401
+
+    # ===============================
+    # UPLOAD
+    # ===============================
+    @app.route("/upload", methods=["POST"])
+    @jwt_required()
+    def upload():
+        usuario_id = int(get_jwt_identity())
+        usuario = usuario_repo.buscar_por_id(usuario_id)
+
+        if not usuario:
+            return jsonify({"erro": "Usuário não encontrado"}), 404
+
+        if "extrato" not in request.files:
+            return jsonify({"erro": "Arquivo não enviado"}), 400
+
+        arquivo = request.files["extrato"]
+
+        try:
+            conta_service.processar_upload(arquivo, usuario)
+
+            return jsonify({"mensagem": "Extrato importado com sucesso!"})
+
+        except Exception as e:
+            return jsonify({"erro": str(e)}), 500
 
     # ===============================
     # DASHBOARD

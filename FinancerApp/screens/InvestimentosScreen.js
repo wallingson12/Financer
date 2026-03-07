@@ -11,7 +11,7 @@ import {
   Alert
 } from "react-native";
 
-const API = "http://192.168.1.33:5000";
+import API from '../services/api';
 
 export default function InvestimentosScreen({ token }) {
   const [papel, setPapel] = useState("");

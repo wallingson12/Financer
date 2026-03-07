@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
-const API = 'http://192.168.1.33:5000';
+import API from '../services/api';
 
 export default function TransacoesScreen({ token }) {
   const [registros, setRegistros] = useState([]);

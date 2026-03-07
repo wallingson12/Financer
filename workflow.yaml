@@ -1,0 +1,32 @@
+# Nome do workflow
+name: workflow CI
+
+# Define quando o workflow roda
+# push, pull_request, branches
+on: push
+
+# Define os trabalhos que serão executados
+# Pode ter vários jobs
+jobs:
+  build:
+    # Define o sistema do servidor que executa o código.
+    runs-on: ubuntu-latest
+
+    # Lista de passos que o job executa.
+    steps:
+      - name: Baixar código
+        # Usa ações prontas do GitHub.
+        # Essa ação baixa o repositório.
+        uses: actions/checkout@v3
+
+      - name: Instalar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Rodar script
+        # run: python main.py
+        run: python main.py

@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 
-const API = 'http://192.168.1.33:5000';
+import API from '../services/api';
 
 export default function ImportarScreen({ token }) {
   const [arquivo, setArquivo] = useState(null);
