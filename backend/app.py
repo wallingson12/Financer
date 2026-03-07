@@ -9,7 +9,6 @@ from flask_login import (
     login_required,
     current_user,
 )
-
 from services.conta_service import ContaService
 from services.alerta_service import AlertaService
 from infrastructure.database import criar_tabelas
