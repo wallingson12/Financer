@@ -1,4 +1,3 @@
-// screens/TransacoesScreen.js
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
