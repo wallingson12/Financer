@@ -32,7 +32,7 @@ class Conta:
 
     def alimentar(self, dados: pd.DataFrame):
         """Recebe dados de qualquer fonte (Excel, CSV, DB...)."""
-        self.dados = dados
+        self.dados = dados[['data', 'tipo', 'detalhe', 'credito', 'debito']]
 
     def exibir_transacoes(self):
         print(f"{'Data':<15} {'Tipo':<30} {'Detalhe':<35} {'Crédito':>12} {'Débito':>12}")
