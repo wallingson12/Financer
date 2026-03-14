@@ -2,48 +2,44 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
-  Text,
   FlatList,
   StyleSheet,
   ActivityIndicator,
-  TouchableOpacity
+  TouchableOpacity,
+  Alert
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { Ionicons } from '@expo/vector-icons';
 
-import API from '../services/api';
+import { carregarTransacoes, categorizarTransacao } from '../services/transacoesService';
+import ResumoTransacoes from '../components/ResumoTransacoes';
+import FiltroMes from '../components/FiltroMes';
+import TransacaoCard from '../components/TransacaoCard';
+import ErroConexao from '../components/ErroConexao';
+import EstadoVazio from '../components/EstadoVazio';
 
 export default function TransacoesScreen({ token }) {
   const [registros, setRegistros] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(null);
   const [mesSelecionado, setMesSelecionado] = useState("todos");
-
-  const categorias = [
-    "Alimentação",
-    "Transporte",
-    "Moradia",
-    "Lazer",
-    "Salário",
-    "Outros"
-  ];
+  const [atualizando, setAtualizando] = useState(null);
 
   useEffect(() => {
-    async function carregar() {
-      try {
-        const res = await fetch(`${API}/api/transacoes`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        const data = await res.json();
-        setRegistros(data);
-      } catch (err) {
-        console.log("Erro:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    carregar();
+    fetchTransacoes();
   }, [token]);
+
+  async function fetchTransacoes() {
+    try {
+      setLoading(true);
+      setErro(null);
+      const data = await carregarTransacoes(token);
+      setRegistros(data);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      setErro(error.message);
+    }
+  }
 
   const meses = useMemo(() => {
     const lista = registros.map(r => r.data.slice(0, 7));
@@ -55,26 +51,48 @@ export default function TransacoesScreen({ token }) {
     return registros.filter(r => r.data.startsWith(mesSelecionado));
   }, [registros, mesSelecionado]);
 
-  async function salvarCategoria(id, categoria, aplicarTodas = false) {
-    await fetch(`${API}/api/categorizar`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
+  const totaisFiltrados = useMemo(() => {
+    return registrosFiltrados.reduce(
+      (acc, item) => ({
+        credito: acc.credito + Number(item.credito || 0),
+        debito: acc.debito + Number(item.debito || 0)
+      }),
+      { credito: 0, debito: 0 }
+    );
+  }, [registrosFiltrados]);
+
+  async function handleCategorizar(id, categoria, aplicarTodas = false) {
+    try {
+      setAtualizando(id);
+      setErro(null);
+      
+      await categorizarTransacao(token, {
         transacao_id: id,
         categoria,
         aplicar_todas: aplicarTodas
-      })
-    });
+      });
 
-    // recarrega lista
-    const res = await fetch(`${API}/api/transacoes`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-    setRegistros(data);
+      setAtualizando(null);
+      await fetchTransacoes();
+
+      if (aplicarTodas) {
+        Alert.alert("✅ Sucesso", "Categoria aplicada em todas as transações iguais!");
+      }
+    } catch (err) {
+      setAtualizando(null);
+
+      if (err.message.includes('Timeout')) {
+        Alert.alert("⏱️ Timeout", "A requisição demorou muito. Tente novamente.");
+      } else if (err.message.includes('Failed to fetch')) {
+        Alert.alert("❌ Erro de Conexão", "Não foi possível conectar na API.");
+      } else {
+        Alert.alert("❌ Erro", err.message);
+      }
+    }
+  }
+
+  if (erro && registros.length === 0) {
+    return <ErroConexao erro={erro} onRetry={fetchTransacoes} titulo="Transações" />;
   }
 
   if (loading) {
@@ -87,70 +105,43 @@ export default function TransacoesScreen({ token }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>Transações</Text>
-
-      {/* Filtro */}
-      <View style={styles.filtro}>
-        <Text style={styles.label}>Filtrar por mês:</Text>
-        <Picker
-          selectedValue={mesSelecionado}
-          onValueChange={(value) => setMesSelecionado(value)}
-          style={styles.picker}
-        >
-          {meses.map(m => (
-            <Picker.Item key={m} label={m} value={m} />
-          ))}
-        </Picker>
+      <View style={styles.header}>
+        <View>
+          <FiltroMes
+            meses={meses}
+            mesSelecionado={mesSelecionado}
+            onMesChange={setMesSelecionado}
+          />
+        </View>
+        <TouchableOpacity onPress={fetchTransacoes} style={styles.botaoReload}>
+          <Ionicons name="refresh" size={24} color="#6366F1" />
+        </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={registrosFiltrados}
-        keyExtractor={(item) => String(item.id)}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.data}>{item.data}</Text>
-            <Text style={styles.tipo}>{item.tipo}</Text>
-            <Text style={styles.detalhe}>{item.detalhe}</Text>
+      {registrosFiltrados.length > 0 && (
+        <ResumoTransacoes totais={totaisFiltrados} />
+      )}
 
-            <View style={styles.valores}>
-              {item.credito > 0 && (
-                <Text style={styles.credito}>
-                  + R$ {Number(item.credito).toFixed(2)}
-                </Text>
-              )}
-              {item.debito > 0 && (
-                <Text style={styles.debito}>
-                  - R$ {Number(item.debito).toFixed(2)}
-                </Text>
-              )}
-            </View>
-
-            <Picker
-              selectedValue={item.categoria}
-              onValueChange={(value) =>
-                salvarCategoria(item.id, value, false)
-              }
-              style={styles.pickerCategoria}
-            >
-              {categorias.map(cat => (
-                <Picker.Item key={cat} label={cat} value={cat} />
-              ))}
-            </Picker>
-
-            <TouchableOpacity
-              style={styles.btnTodas}
-              onPress={() =>
-                salvarCategoria(item.id, item.categoria, true)
-              }
-            >
-              <Text style={styles.btnTexto}>
-                Aplicar em todas iguais
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      />
+      {registrosFiltrados.length === 0 ? (
+        <EstadoVazio
+          titulo="Nenhuma transação encontrada."
+          subtitulo="Importe um extrato para visualizar"
+          icon="document-outline"
+        />
+      ) : (
+        <FlatList
+          data={registrosFiltrados}
+          keyExtractor={(item) => String(item.id)}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <TransacaoCard
+              item={item}
+              atualizando={atualizando === item.id}
+              onCategorizar={handleCategorizar}
+            />
+          )}
+        />
+      )}
     </View>
   );
 }
@@ -167,68 +158,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#0F172A"
   },
-  titulo: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#F8FAFC",
-    marginBottom: 20
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16
   },
-  filtro: {
-    marginBottom: 20
-  },
-  label: {
-    color: "#94A3B8",
-    marginBottom: 5
-  },
-  picker: {
-    backgroundColor: "#1E293B",
-    color: "white"
-  },
-  card: {
-    backgroundColor: "#1E293B",
-    padding: 15,
-    borderRadius: 14,
-    marginBottom: 14
-  },
-  data: {
-    color: "#94A3B8",
-    fontSize: 12
-  },
-  tipo: {
-    color: "#F8FAFC",
-    fontWeight: "bold",
-    marginTop: 5
-  },
-  detalhe: {
-    color: "#CBD5E1",
-    marginBottom: 6
-  },
-  valores: {
-    flexDirection: "row",
-    justifyContent: "space-between"
-  },
-  credito: {
-    color: "#22C55E",
-    fontWeight: "bold"
-  },
-  debito: {
-    color: "#EF4444",
-    fontWeight: "bold"
-  },
-  pickerCategoria: {
-    backgroundColor: "#334155",
-    color: "white",
-    marginTop: 10
-  },
-  btnTodas: {
-    marginTop: 8,
-    backgroundColor: "#6366F1",
+  botaoReload: {
     padding: 8,
     borderRadius: 8,
-    alignItems: "center"
-  },
-  btnTexto: {
-    color: "white",
-    fontSize: 12
+    backgroundColor: '#1E293B',
+    marginTop: 20
   }
 });

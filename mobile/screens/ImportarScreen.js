@@ -1,15 +1,12 @@
+// screens/ImportarScreen.js
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert
-} from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 
-import API from '../services/api';
+import { enviarExtrato } from '../services/importarService';
+import ArquivoSelecionador from '../components/ArquivoSelecionador';
+import BotaoUpload from '../components/BotaoUpload';
+import InfoUpload from '../components/InfoUpload';
 
 export default function ImportarScreen({ token }) {
   const [arquivo, setArquivo] = useState(null);
@@ -22,14 +19,13 @@ export default function ImportarScreen({ token }) {
       });
 
       if (result.canceled) return;
-
       setArquivo(result.assets[0]);
     } catch (err) {
       Alert.alert('Erro', 'Não foi possível selecionar o arquivo.');
     }
   }
 
-  async function enviarArquivo() {
+  async function handleEnviar() {
     if (!arquivo) {
       Alert.alert('Atenção', 'Selecione um arquivo primeiro.');
       return;
@@ -37,55 +33,44 @@ export default function ImportarScreen({ token }) {
 
     try {
       setLoading(true);
-
-      const formData = new FormData();
-      formData.append('extrato', {
-        uri: arquivo.uri,
-        name: arquivo.name,
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      });
-
-      const response = await fetch(`${API}/upload`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        },
-        body: formData
-      });
-
-      if (response.ok) {
-        Alert.alert('Sucesso', 'Extrato importado com sucesso!');
-        setArquivo(null);
-      } else {
-        Alert.alert('Erro', 'Falha ao enviar o arquivo.');
-      }
-
-    } catch (error) {
-      console.log(error);
-      Alert.alert('Erro', 'Erro ao enviar arquivo.');
-    } finally {
+      await enviarExtrato(arquivo, token);
       setLoading(false);
+      Alert.alert('✅ Sucesso', 'Extrato importado com sucesso!');
+      setArquivo(null);
+    } catch (error) {
+      setLoading(false);
+
+      if (error.message.includes('Timeout')) {
+        Alert.alert(
+          "⏱️ Tempo Limite Excedido",
+          "O upload demorou muito. O arquivo pode ser muito grande ou sua conexão é lenta.\n\nTente com um arquivo menor."
+        );
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
+        Alert.alert(
+          "❌ Erro de Conexão",
+          "Não foi possível conectar na API. Verifique:\n- Se a API está rodando\n- Se o IP/URL está correto\n- Sua conexão de internet"
+        );
+      } else {
+        Alert.alert('❌ Erro', error.message || 'Erro ao enviar arquivo.');
+      }
     }
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>Importar Extrato</Text>
+      <ArquivoSelecionador
+        arquivo={arquivo}
+        onSelecionar={selecionarArquivo}
+        disabled={loading}
+      />
 
-      <TouchableOpacity style={styles.botaoSecundario} onPress={selecionarArquivo}>
-        <Text style={styles.botaoTexto}>
-          {arquivo ? arquivo.name : 'Selecionar arquivo .xlsx'}
-        </Text>
-      </TouchableOpacity>
+      <BotaoUpload
+        loading={loading}
+        arquivoSelecionado={!!arquivo}
+        onPress={handleEnviar}
+      />
 
-      <TouchableOpacity style={styles.botao} onPress={enviarArquivo}>
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.botaoTexto}>Analisar</Text>
-        )}
-      </TouchableOpacity>
+      <InfoUpload />
     </View>
   );
 }
@@ -95,27 +80,5 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#f4f6f8'
-  },
-  titulo: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20
-  },
-  botao: {
-    backgroundColor: '#1976D2',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12
-  },
-  botaoSecundario: {
-    backgroundColor: '#e0e0e0',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center'
-  },
-  botaoTexto: {
-    color: '#000',
-    fontWeight: '600'
   }
 });

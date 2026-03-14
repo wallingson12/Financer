@@ -1,91 +1,74 @@
 // screens/LoginScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
+import { View, Alert, StyleSheet } from 'react-native';
 
-import API from '../services/api';
+import { fazerLogin } from '../services/loginService';
+import FormularioLogin from '../components/FormularioLogin';
+import BotaoLogin from '../components/BotaoLogin';
 
 export default function LoginScreen({ setToken }) {
   const [numero, setNumero] = useState('');
   const [senha, setSenha] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  async function login() {
-    console.log("BOTÃO CLICADO");
-
+  async function handleLogin() {
     if (!numero || !senha) {
       Alert.alert("Erro", "Preencha número e senha");
       return;
     }
 
     try {
-      const res = await fetch(`${API}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ numero, senha })
-      });
-
-      console.log("Status HTTP:", res.status);
-
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        Alert.alert("Erro", "Resposta inválida do servidor");
-        return;
-      }
-
-      console.log("Resposta:", data);
-
-      if (!res.ok) {
-        Alert.alert("Erro", data.erro || "Erro no login");
-        return;
-      }
-
-      if (data.token) {
-        console.log("TOKEN RECEBIDO");
-        setToken(data.token);
+      setLoading(true);
+      const response = await fazerLogin(numero, senha);
+      setLoading(false);
+      
+      if (response.token) {
+        setToken(response.token);
       } else {
         Alert.alert("Erro", "Token não recebido");
       }
-
     } catch (error) {
-      console.log("ERRO DE CONEXÃO:", error);
-      Alert.alert("Erro", "Não conseguiu conectar na API");
+      setLoading(false);
+
+      if (error.message.includes('Timeout')) {
+        Alert.alert(
+          "⏱️ Tempo Limite Excedido",
+          "A requisição demorou muito. Verifique sua conexão de internet."
+        );
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
+        Alert.alert(
+          "❌ Erro de Conexão",
+          "Não foi possível conectar na API. Verifique:\n- Se a API está rodando\n- Se o IP/URL está correto\n- Sua conexão de internet"
+        );
+      } else {
+        Alert.alert("❌ Erro", error.message);
+      }
     }
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>💰 Financer</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Número da conta"
-        value={numero}
-        onChangeText={setNumero}
-        autoCapitalize="none"
+      <FormularioLogin
+        numero={numero}
+        senha={senha}
+        onNumeroChange={setNumero}
+        onSenhaChange={setSenha}
+        disabled={loading}
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        value={senha}
-        secureTextEntry
-        onChangeText={setSenha}
+      <BotaoLogin
+        loading={loading}
+        onPress={handleLogin}
       />
-
-      <Button title="Entrar" onPress={login} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24 },
-  titulo: { fontSize: 28, fontWeight: 'bold', marginBottom: 32, textAlign: 'center' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16
+  container: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    padding: 24,
+    backgroundColor: '#f5f5f5'
   }
 });

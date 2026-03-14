@@ -101,6 +101,7 @@ def create_app() -> Flask:
     @app.route("/upload", methods=["POST"])
     @jwt_required()
     def upload():
+        request.stream.read(timeout=30)
         usuario_id = int(get_jwt_identity())
         usuario = usuario_repo.buscar_por_id(usuario_id)
 

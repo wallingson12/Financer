@@ -1,0 +1,93 @@
+// services/investimentosService.js
+import API from './api';
+
+// ✅ Função com timeout
+const fetchWithTimeout = (url, options = {}, timeout = 15000) => {
+  return Promise.race([
+    fetch(url, options),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout: Requisição excedeu 15s')), timeout)
+    )
+  ]);
+};
+
+export async function carregarInvestimentos(token) {
+  try {
+    const res = await fetchWithTimeout(`${API}/api/investimentos`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }, 15000);
+
+    if (!res.ok) {
+      throw new Error('Erro ao carregar investimentos');
+    }
+
+    const data = await res.json();
+    return data || [];
+  } catch (error) {
+    console.log("ERRO ao carregar investimentos:", error.message);
+
+    if (error.message.includes('Timeout')) {
+      throw new Error('⏱️ Tempo limite excedido. Tente novamente.');
+    } else if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
+      throw new Error('❌ Não foi possível conectar. Verifique sua conexão.');
+    } else {
+      throw new Error('❌ Erro ao carregar investimentos');
+    }
+  }
+}
+
+export async function adicionarInvestimento(token, dados) {
+  try {
+    const res = await fetchWithTimeout(`${API}/api/investimentos/salvar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(dados)
+    }, 15000);
+
+    if (!res.ok) {
+      throw new Error('Erro ao adicionar investimento');
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.log("ERRO ao adicionar investimento:", error.message);
+
+    if (error.message.includes('Timeout')) {
+      throw new Error('Timeout: Requisição excedeu 15s');
+    } else if (error.message.includes('Failed to fetch')) {
+      throw new Error('Failed to fetch: Verifique sua conexão de internet');
+    } else {
+      throw error;
+    }
+  }
+}
+
+export async function removerInvestimento(token, investimentoId) {
+  try {
+    const res = await fetchWithTimeout(`${API}/api/investimentos/remover/${investimentoId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }, 15000);
+
+    if (!res.ok) {
+      throw new Error('Erro ao remover investimento');
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.log("ERRO ao remover investimento:", error.message);
+
+    if (error.message.includes('Timeout')) {
+      throw new Error('Timeout: Requisição excedeu 15s');
+    } else if (error.message.includes('Failed to fetch')) {
+      throw new Error('Failed to fetch: Verifique sua conexão de internet');
+    } else {
+      throw error;
+    }
+  }
+}

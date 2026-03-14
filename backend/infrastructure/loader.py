@@ -6,7 +6,8 @@ class ExcelLoader():
         self.arquivo_excel = arquivo_excel
 
     def carregar(self):
-        dados = pd.read_excel(self.arquivo_excel)
+        MAX_ROWS = 100000
+        dados = pd.read_excel(self.arquivo_excel, MAX_ROWS)
         dados.columns = dados.columns.str.strip()
 
         dados['Data'] = pd.to_datetime(dados['Data'].astype(str).str.strip(), dayfirst=True)
