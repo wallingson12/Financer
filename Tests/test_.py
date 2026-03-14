@@ -13,15 +13,15 @@ from backend.models.main import Conta
 # -------------------------------------------------
 def criar_dados_exemplo():
     return pd.DataFrame({
-        'Data': pd.to_datetime([
+        'data': pd.to_datetime([
             '2024-01-10',
             '2024-01-15',
             '2024-02-05'
         ]),
-        'Tipo': ['Pix', 'Boleto', 'Cartão'],
-        'Detalhe': ['Cliente A', 'Internet', 'Supermercado'],
-        'Crédito (R$)': [1000, 500, 200],
-        'Débito (R$)': [200, 100, 50]
+        'tipo': ['Pix', 'Boleto', 'Cartão'],
+        'detalhe': ['Cliente A', 'Internet', 'Supermercado'],
+        'credito': [1000, 500, 200],
+        'debito': [200, 100, 50]
     })
 
 
