@@ -184,15 +184,12 @@ class InvestimentoRepository:
         return [dict(row) for row in rows]
 
     def salvar(self, usuario_id, saldo, papel, descricao='Sem descrição'):
-        """Insere ou atualiza investimento do usuário"""
+        """Insere novo investimento do usuário"""
         conn = get_connection()
         conn.execute("""
-            INSERT INTO investimentos (usuario_id, saldo, descricao)
-            VALUES (?, ?, ?)
-            ON CONFLICT(usuario_id) DO UPDATE SET
-                saldo = excluded.saldo,
-                descricao = excluded.descricao
-        """, (usuario_id, saldo, descricao))
+            INSERT INTO investimentos (usuario_id, saldo, papel, descricao)
+            VALUES (?, ?, ?, ?)
+        """, (usuario_id, saldo, papel, descricao))  # ✅ Agora inclui 'papel'
         conn.commit()
         conn.close()
 

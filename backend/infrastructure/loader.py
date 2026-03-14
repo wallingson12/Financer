@@ -22,4 +22,14 @@ class ExcelLoader():
         dados[['Tipo', 'Detalhe']] = dados['Descrição'].str.split(r'\s{2,}', n=1, expand=True)
         dados['Detalhe'] = dados['Detalhe'].fillna('')
 
+        # ✅ ADICIONE ISTO - Normalizar nomes das colunas
+        dados = dados.rename(columns={
+            'Data': 'data',
+            'Crédito (R$)': 'credito',
+            'Débito (R$)': 'debito',
+            'Tipo': 'tipo',
+            'Detalhe': 'detalhe',
+            'Descrição': 'descricao'
+        })
+
         return dados

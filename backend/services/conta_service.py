@@ -24,14 +24,6 @@ class ContaService:
         self._loader_cls = loader_cls
 
     def processar_upload(self, arquivo, usuario) -> Conta:
-        """
-        Processa o upload de um extrato bancário, filtra transações duplicadas
-        e persiste apenas as novas, recalculando os saldos mensais.
-
-        :param arquivo: Arquivo de extrato enviado pelo usuário (CSV ou Excel).
-        :param usuario: Objeto do usuário autenticado com atributos id, nome e numero.
-        :return: Objeto Conta atualizado com os dados processados.
-        """
         loader = self._loader_cls(arquivo)
         dados = loader.carregar()
 
@@ -53,24 +45,33 @@ class ContaService:
 
         novas = []
         for _, row in conta.dados.iterrows():
-            row_data = pd.to_datetime(row['Data'], errors='coerce')
+            row_data = pd.to_datetime(row['data'], errors='coerce')
 
             existente_mes = existentes[
                 (existentes['data'].dt.month == row_data.month) &
                 (existentes['data'].dt.year == row_data.year)
-            ]
+                ]
 
-            if not ((existente_mes['tipo'] == row['Tipo']) &
-                    (existente_mes['detalhe'] == row['Detalhe']) &
-                    (existente_mes['credito'] == row['Crédito (R$)']) &
-                    (existente_mes['debito'] == row['Débito (R$)'])).any():
+            if not ((existente_mes['tipo'] == row['tipo']) &
+                    (existente_mes['detalhe'] == row['detalhe']) &
+                    (existente_mes['credito'] == row['credito']) &
+                    (existente_mes['debito'] == row['debito'])).any():
                 novas.append(row)
 
         if novas:
             conta_novas = Conta(nome=conta.nome, numero=conta.numero)
             conta_novas.alimentar(pd.DataFrame(novas))
             self._conta_repo.salvar_transacoes(conta_novas, usuario_id)
-            conta.recalcular_saldo_do_banco(pd.DataFrame(novas))
+
+        # ✅ FIX: Buscar TODAS as transações (antigas + novas) e recalcular
+        todas_as_transacoes = self._conta_repo.buscar_transacoes(usuario_id)
+
+        if todas_as_transacoes:
+            todas_as_transacoes = pd.DataFrame(todas_as_transacoes)
+            todas_as_transacoes['data'] = pd.to_datetime(todas_as_transacoes['data'], errors='coerce')
+            conta.recalcular_saldo_do_banco(todas_as_transacoes)
+        else:
+            conta.recalcular_saldo_do_banco(pd.DataFrame(columns=['data', 'tipo', 'detalhe', 'credito', 'debito']))
 
         self._conta_repo.salvar_saldos_mensais(conta, usuario_id)
 
