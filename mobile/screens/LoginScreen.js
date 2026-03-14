@@ -1,12 +1,23 @@
 // screens/LoginScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 
 import API from '../services/api';
+
+// ✅ Função com timeout
+const fetchWithTimeout = (url, options = {}, timeout = 15000) => {
+  return Promise.race([
+    fetch(url, options),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout: Requisição excedeu 15s')), timeout)
+    )
+  ]);
+};
 
 export default function LoginScreen({ setToken }) {
   const [numero, setNumero] = useState('');
   const [senha, setSenha] = useState('');
+  const [loading, setLoading] = useState(false); // ✅ Estado de loading
 
   async function login() {
     console.log("BOTÃO CLICADO");
@@ -17,11 +28,14 @@ export default function LoginScreen({ setToken }) {
     }
 
     try {
-      const res = await fetch(`${API}/api/login`, {
+      setLoading(true); // ✅ Inicia loading
+
+      // ✅ Usando fetchWithTimeout
+      const res = await fetchWithTimeout(`${API}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ numero, senha })
-      });
+      }, 15000);
 
       console.log("Status HTTP:", res.status);
 
@@ -29,6 +43,7 @@ export default function LoginScreen({ setToken }) {
       try {
         data = await res.json();
       } catch {
+        setLoading(false);
         Alert.alert("Erro", "Resposta inválida do servidor");
         return;
       }
@@ -36,20 +51,39 @@ export default function LoginScreen({ setToken }) {
       console.log("Resposta:", data);
 
       if (!res.ok) {
+        setLoading(false); // ✅ Para loading
         Alert.alert("Erro", data.erro || "Erro no login");
         return;
       }
 
       if (data.token) {
         console.log("TOKEN RECEBIDO");
+        setLoading(false); // ✅ Para loading
         setToken(data.token);
       } else {
+        setLoading(false);
         Alert.alert("Erro", "Token não recebido");
       }
 
     } catch (error) {
-      console.log("ERRO DE CONEXÃO:", error);
-      Alert.alert("Erro", "Não conseguiu conectar na API");
+      setLoading(false); // ✅ Para loading em caso de erro
+
+      console.log("ERRO DE CONEXÃO:", error.message);
+
+      // ✅ Tratamento específico de erros
+      if (error.message.includes('Timeout')) {
+        Alert.alert(
+          "⏱️ Tempo Limite Excedido",
+          "A requisição demorou muito. Verifique sua conexão de internet."
+        );
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
+        Alert.alert(
+          "❌ Erro de Conexão",
+          "Não foi possível conectar na API. Verifique:\n- Se a API está rodando\n- Se o IP/URL está correto\n- Sua conexão de internet"
+        );
+      } else {
+        Alert.alert("Erro", error.message);
+      }
     }
   }
 
@@ -63,6 +97,7 @@ export default function LoginScreen({ setToken }) {
         value={numero}
         onChangeText={setNumero}
         autoCapitalize="none"
+        editable={!loading} // ✅ Desabilita input enquanto loading
       />
 
       <TextInput
@@ -71,9 +106,18 @@ export default function LoginScreen({ setToken }) {
         value={senha}
         secureTextEntry
         onChangeText={setSenha}
+        editable={!loading} // ✅ Desabilita input enquanto loading
       />
 
-      <Button title="Entrar" onPress={login} />
+      {/* ✅ Botão com loading */}
+      {loading ? (
+        <View style={styles.loadingButton}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loadingText}>Autenticando...</Text>
+        </View>
+      ) : (
+        <Button title="Entrar" onPress={login} />
+      )}
     </View>
   );
 }
@@ -87,5 +131,19 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16
+  },
+  loadingButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 10
+  },
+  loadingText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16
   }
 });
