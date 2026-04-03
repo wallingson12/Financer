@@ -1,62 +1,87 @@
-import sqlite3
+import os
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import Column, Integer, String, Float, ForeignKey
+
+# -------------------------------------------------------------------
+# Conexão
+# Em desenvolvimento: define DATABASE_URL no seu .env
+# No Render: a variável é preenchida automaticamente pelo serviço PostgreSQL
+# -------------------------------------------------------------------
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///financer.db")
+
+# O Render fornece URLs com prefixo "postgres://", mas o SQLAlchemy exige "postgresql://"
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(bind=engine)
+Base = declarative_base()
 
 
-def get_connection():
-    conn = sqlite3.connect("financer.db")
-    conn.row_factory = sqlite3.Row
-    return conn
+# -------------------------------------------------------------------
+# Modelos
+# -------------------------------------------------------------------
+class Usuario(Base):
+    __tablename__ = "usuarios"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nome = Column(String, nullable=False)
+    numero = Column(String, nullable=False)
+    senha_hash = Column(String, nullable=False)
+    tipo = Column(String, nullable=False, default="pessoal")
 
 
+class Transacao(Base):
+    __tablename__ = "transacoes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+    data = Column(String)
+    tipo = Column(String)
+    detalhe = Column(String)
+    credito = Column(Float)
+    debito = Column(Float)
+    categoria = Column(String, default="Sem categoria")
+
+
+class SaldoMensal(Base):
+    __tablename__ = "saldos_mensais"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+    mes = Column(String)
+    total_credito = Column(Float)
+    total_debito = Column(Float)
+    saldo = Column(Float)
+
+
+class Investimento(Base):
+    __tablename__ = "investimentos"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False, unique=True)
+    saldo = Column(Float, nullable=False, default=0.0)
+    descricao = Column(String, default="Sem descrição")
+
+
+# -------------------------------------------------------------------
+# Criação das tabelas (substitui criar_tabelas())
+# -------------------------------------------------------------------
 def criar_tabelas():
-    conn = get_connection()
-    # Tabela de usuários
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL,
-            numero TEXT NOT NULL,
-            senha_hash TEXT NOT NULL,
-            tipo TEXT NOT NULL DEFAULT 'pessoal'
-        )
-    """)
-    # Tabela de transações (sem UNIQUE para permitir importações livres)
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS transacoes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER,
-            data TEXT,
-            tipo TEXT,
-            detalhe TEXT,
-            credito REAL,
-            debito REAL,
-            categoria TEXT DEFAULT 'Sem categoria',
-            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-        )
-    """)
-    # Tabela de saldos mensais
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS saldos_mensais (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER,
-            mes TEXT,
-            total_credito REAL,
-            total_debito REAL,
-            saldo REAL,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-        )
-    """)
-    conn.commit()
+    Base.metadata.create_all(bind=engine)
 
-    # Tabela de Investimentos
-    conn.execute("PRAGMA foreign_keys = ON")
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS investimentos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER NOT NULL UNIQUE,         -- Referência ao usuário dono do investimento
-            saldo REAL NOT NULL DEFAULT 0.0,            -- Saldo total: soma de créditos - débitos
-            descricao TEXT DEFAULT 'Sem descrição',     -- Descrição do papel/investimento
-            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-        )
-    """)
-    conn.commit()
-    conn.close()
+
+# -------------------------------------------------------------------
+# Helpers para migração gradual do código existente
+# Permite continuar usando o padrão conn.execute() enquanto migra
+# -------------------------------------------------------------------
+def get_connection():
+    """Retorna uma conexão raw para uso com execute() direto.
+    Use durante a migração. Prefira get_session() no código novo."""
+    return engine.connect()
+
+
+def get_session():
+    """Retorna uma Session do SQLAlchemy para o código novo."""
+    return SessionLocal()

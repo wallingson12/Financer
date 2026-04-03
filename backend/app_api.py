@@ -1,6 +1,7 @@
+from dotenv import load_dotenv
+load_dotenv()
 import os
 import re
-
 from flask import Flask, jsonify, request
 from flask_jwt_extended import (
     JWTManager,
@@ -16,7 +17,6 @@ from repositories.repository import (
     ContaRepository,
     InvestimentoRepository
 )
-
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -90,7 +90,8 @@ def create_app() -> Flask:
 
             return jsonify({
                 "token": token,
-                "nome": usuario.nome
+                "nome": usuario.nome,
+                "tipo": usuario.tipo
             })
 
         return jsonify({"erro": "Número ou senha incorretos."}), 401
