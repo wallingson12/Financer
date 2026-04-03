@@ -4,6 +4,10 @@
 venv/
 .venv/
 env/
+perfil/
+reports/
+.env
+.csv
 
 # =========================
 # Database

@@ -71,7 +71,7 @@ function ErrorAlert({ error, onRetry, onDismiss }) {
   );
 }
 
-function AppTabs({ token }) {
+function AppTabs({ token, tipo }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -91,7 +91,7 @@ function AppTabs({ token }) {
               iconName = focused ? "cash" : "cash-outline";
             } else if (route.name === "Importar") {
               iconName = focused ? "cloud-upload" : "cloud-upload-outline";
-            } else if (route.name === "Avisos") {
+            } else if (route.name === "MEI") {
               iconName = focused ? "alert-circle" : "alert-circle-outline";
             }
 
@@ -145,11 +145,11 @@ function AppTabs({ token }) {
           )}
         </Tab.Screen>
 
-        <Tab.Screen name="Avisos">
-          {props => (
-            <AvisosScreen {...props} />
-          )}
-        </Tab.Screen>
+        {tipo === 'mei' && (
+          <Tab.Screen name="MEI">
+            {props => <AvisosScreen {...props} />}
+          </Tab.Screen>
+        )}
       </Tab.Navigator>
 
       <LoadingOverlay visible={loading} />
@@ -166,6 +166,7 @@ export default function App() {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [tipo, setTipo] = useState(null);
 
   const handleLogout = () => {
     setToken(null);
@@ -181,6 +182,7 @@ export default function App() {
               <LoginScreen
                 {...props}
                 setToken={setToken}
+                setTipo={setTipo}
                 setLoading={setLoading}
                 setError={setError}
               />
@@ -189,7 +191,7 @@ export default function App() {
         ) : (
           <Stack.Screen name="App">
             {props => (
-              <AppTabs {...props} token={token} onLogout={handleLogout} />
+              <AppTabs {...props} token={token} tipo={tipo} onLogout={handleLogout} />
             )}
           </Stack.Screen>
         )}

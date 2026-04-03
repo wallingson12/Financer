@@ -6,7 +6,7 @@ import { fazerLogin } from '../services/loginService';
 import FormularioLogin from '../components/FormularioLogin';
 import BotaoLogin from '../components/BotaoLogin';
 
-export default function LoginScreen({ setToken }) {
+export default function LoginScreen({ setToken, setTipo }) {
   const [numero, setNumero] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,6 +24,7 @@ export default function LoginScreen({ setToken }) {
       
       if (response.token) {
         setToken(response.token);
+        setTipo(response.tipo);
       } else {
         Alert.alert("Erro", "Token não recebido");
       }
