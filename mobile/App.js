@@ -9,6 +9,7 @@ import DashboardScreen from './screens/DashboardScreen';
 import TransacoesScreen from './screens/TransacoesScreen';
 import InvestimentosScreen from './screens/InvestimentosScreen';
 import ImportarScreen from './screens/ImportarScreen';
+import AvisosScreen from './screens/AvisosScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -90,6 +91,8 @@ function AppTabs({ token }) {
               iconName = focused ? "cash" : "cash-outline";
             } else if (route.name === "Importar") {
               iconName = focused ? "cloud-upload" : "cloud-upload-outline";
+            } else if (route.name === "Avisos") {
+              iconName = focused ? "alert-circle" : "alert-circle-outline";
             }
 
             return <Ionicons name={iconName} size={size} color={color} />;
@@ -139,6 +142,12 @@ function AppTabs({ token }) {
               setLoading={setLoading}
               setError={setError}
             />
+          )}
+        </Tab.Screen>
+
+        <Tab.Screen name="Avisos">
+          {props => (
+            <AvisosScreen {...props} />
           )}
         </Tab.Screen>
       </Tab.Navigator>

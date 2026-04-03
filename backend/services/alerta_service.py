@@ -1,3 +1,5 @@
+from datetime import datetime
+
 LIMITE_MEI = 81000.00
 LIMITE_MEI_EXCESSO = 81000.00 * 1.20  # R$ 97.200
 
@@ -13,4 +15,16 @@ class AlertaService:
             return f'🚨 Atenção! Você atingiu {percentual:.1f}% do limite anual MEI!'
         elif percentual >= 75:
             return f'⚠️ Você atingiu {percentual:.1f}% do limite anual MEI.'
+        return None
+
+    def lembrete_DAS(self):
+        """Retorna um alerta uma vez por dia (dias 1, 10, 15, 20)"""
+        dia = datetime.now().day
+
+        if dia in [1, 10, 15, 20]:
+            return {
+                'titulo': '📢 Aviso MEI',
+                'mensagem': 'Você já pagou seu DAS?'
+            }
+
         return None

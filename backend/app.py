@@ -14,6 +14,12 @@ from services.alerta_service import AlertaService
 from infrastructure.database import criar_tabelas
 from repositories.repository import UsuarioRepository, ContaRepository, InvestimentoRepository
 
+from dotenv import load_dotenv
+from pathlib import Path
+import os
+
+load_dotenv(Path(__file__).parent.parent / ".env")
+print("DATABASE_URL:", os.environ.get("DATABASE_URL"))
 
 def create_app() -> Flask:
     app = Flask(__name__)
