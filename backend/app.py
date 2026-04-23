@@ -17,13 +17,23 @@ from repositories.repository import UsuarioRepository, ContaRepository, Investim
 from dotenv import load_dotenv
 from pathlib import Path
 import os
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 print("DATABASE_URL:", os.environ.get("DATABASE_URL"))
 
 def create_app() -> Flask:
     app = Flask(__name__)
-    app.config["SECRET_KEY"] = os.environ.get("FINANCER_SECRET_KEY", "dev-financer-secret")
+
+    limiter = Limiter(
+        get_remote_address,
+        app=app,
+        default_limits=[],
+        storage_uri="memory://"
+    )
+
+    app.config["SECRET_KEY"] = os.environ.get("FINANCER_SECRET_KEY")
 
     login_manager = LoginManager(app)
     login_manager.login_view = 'login'
@@ -207,4 +217,4 @@ def create_app() -> Flask:
 if __name__ == '__main__':
     app = create_app()
     criar_tabelas()
-    app.run(debug=True)
+    app.run(debug=False)

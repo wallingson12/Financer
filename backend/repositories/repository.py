@@ -12,11 +12,11 @@ class UsuarioRepository:
             with get_connection() as conn:
                 conn.execute(
                     text("INSERT INTO usuarios (nome, numero, senha_hash, tipo) VALUES (:nome, :numero, :senha_hash, :tipo)"),
-                    {"nome": nome, "numero": numero, "senha_hash": generate_password_hash(senha), "tipo": tipo}
+                    {"nome": nome, "numero": numero, "senha_hash": generate_password_hash(senha, method='bcrypt'), "tipo": tipo}
                 )
                 conn.commit()
         except Exception as e:
-            logger.error(f"Erro ao criar usuário: {e}")
+            logger.exception("Erro ao criar usuário")
             raise ValueError("Não foi possível criar o usuário")
 
     def buscar_por_numero(self, numero):
