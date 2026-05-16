@@ -1,7 +1,6 @@
 from datetime import timedelta
-
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(encoding="utf-8", override=True)
 import os
 import re
 import logging
@@ -15,6 +14,7 @@ from flask_jwt_extended import (
 )
 
 from services.conta_service import ContaService
+from services.category import CATEGORIAS_VALIDAS
 from infrastructure.database import criar_tabelas
 from repositories.repository import (
     UsuarioRepository,
@@ -27,22 +27,41 @@ from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 
+# -------------------------------------------------------
+# Logger de auditoria separado — registra eventos de
+# segurança sem misturar com logs de aplicação.
+# -------------------------------------------------------
+audit_log = logging.getLogger("financer.audit")
+
+
 def create_app() -> Flask:
     app = Flask(__name__)
-    CORS(app)
 
+    # Em produção defina FINANCER_ALLOWED_ORIGINS=https://app.financer.com.br
+    # Em dev, o padrão continua sendo localhost:3000.
+    cors_origins_raw = os.environ.get(
+        "FINANCER_ALLOWED_ORIGINS", "http://localhost:3000"
+    )
+    cors_origins = [o.strip() for o in cors_origins_raw.split(",") if o.strip()]
+    CORS(app, origins=cors_origins)
+
+    # Defina REDIS_URL no ambiente para habilitar (ex: redis://localhost:6379/0).
+    # Sem Redis, cai para memória — adequado apenas para processo único.
+    limiter_storage = os.environ.get("REDIS_URL", "memory://")
     limiter = Limiter(
         get_remote_address,
         app=app,
         default_limits=[],
-        storage_uri="memory://"
+        storage_uri=limiter_storage
     )
 
     secret_key = os.environ.get("FINANCER_SECRET_KEY")
     jwt_key = os.environ.get("FINANCER_JWT_KEY")
 
     if not secret_key or not jwt_key:
-        raise RuntimeError("Variáveis de ambiente FINANCER_SECRET_KEY e FINANCER_JWT_KEY são obrigatórias.")
+        raise RuntimeError(
+            "Variáveis de ambiente FINANCER_SECRET_KEY e FINANCER_JWT_KEY são obrigatórias."
+        )
 
     app.config["SECRET_KEY"] = secret_key
     app.config["JWT_SECRET_KEY"] = jwt_key
@@ -76,38 +95,34 @@ def create_app() -> Flask:
             404: "Rota não encontrada",
             405: "Método não permitido",
             413: "Arquivo muito grande",
-            429: "Muitas requisições"
+            429: "Muitas requisições. Aguarde um momento."
         }
-
-        return jsonify({
-            "erro": mensagens.get(e.code, e.description)
-        }), e.code
+        return jsonify({"erro": mensagens.get(e.code, e.description)}), e.code
 
     # ==================================
     # ERROS INTERNOS
     # ==================================
     @app.errorhandler(Exception)
     def handle_internal_error(e):
-        logging.exception(e)
-
-        return jsonify({
-            "erro": "Erro interno do servidor"
-        }), 500
+        # Loga o traceback internamente, nunca expõe ao cliente
+        logging.exception("Erro interno não tratado")
+        return jsonify({"erro": "Erro interno do servidor"}), 500
 
     usuario_repo = UsuarioRepository()
     conta_repo = ContaRepository()
     investimento_repo = InvestimentoRepository()
     conta_service = ContaService(conta_repo)
 
+    # ===============================
+    # REFRESH TOKEN
+    # ===============================
     @app.route("/api/refresh", methods=["POST"])
     @jwt_required(refresh=True)
     @limiter.limit("20 per minute")
     def refresh():
         user_id = get_jwt_identity()
         novo_token = create_access_token(identity=user_id)
-        return jsonify({
-            "access_token": novo_token
-        })
+        return jsonify({"access_token": novo_token})
 
     # ===============================
     # REGISTRO
@@ -115,14 +130,13 @@ def create_app() -> Flask:
     @app.route("/api/registro", methods=["POST"])
     @limiter.limit("5 per minute")
     def registro():
-        data = request.get_json(silent=True)
-
-        if not data:
+        data = request.get_json(silent=True, force=False)
+        if not isinstance(data, dict) or not data:
             return jsonify({"erro": "JSON inválido"}), 400
 
-        nome = str(data.get("nome", "")).strip()
+        nome   = str(data.get("nome",   "")).strip()
         numero = str(data.get("numero", "")).strip()
-        senha = str(data.get("senha", "")).strip()
+        senha  = str(data.get("senha",  "")).strip()
 
         if not nome or not numero or not senha:
             return jsonify({"erro": "Preencha todos os campos."}), 400
@@ -136,20 +150,22 @@ def create_app() -> Flask:
             }), 400
 
         if not re.match(r"^\d{7}-\d{1}$", numero):
-            return jsonify({
-                "erro": "Número inválido. Use 1234567-8"
-            }), 400
+            return jsonify({"erro": "Número inválido. Use 1234567-8"}), 400
 
         if usuario_repo.buscar_por_numero(numero):
-            return jsonify({
-                "erro": "Não foi possível concluir cadastro."
-            }), 400
+            # Mensagem genérica — não confirma se o número existe
+            return jsonify({"erro": "Não foi possível concluir o cadastro."}), 400
 
         usuario_repo.criar(nome, numero, senha)
 
-        return jsonify({
-            "mensagem": "Conta criada com sucesso!"
-        }), 201
+        # Log de auditoria: criação de conta
+        audit_log.info(
+            "registro_ok numero=%s ip=%s",
+            numero,
+            request.remote_addr
+        )
+
+        return jsonify({"mensagem": "Conta criada com sucesso!"}), 201
 
     # ===============================
     # LOGIN
@@ -158,12 +174,11 @@ def create_app() -> Flask:
     @limiter.limit("5 per minute")
     def login():
         data = request.get_json(silent=True)
-
         if not data:
             return jsonify({"erro": "JSON inválido"}), 400
 
         numero = str(data.get("numero", "")).strip()
-        senha = str(data.get("senha", "")).strip()
+        senha  = str(data.get("senha",  "")).strip()
 
         if not numero or not senha:
             return jsonify({"erro": "Credenciais inválidas."}), 401
@@ -174,15 +189,29 @@ def create_app() -> Flask:
         usuario = usuario_repo.buscar_por_numero(numero)
 
         if usuario and usuario.checar_senha(senha):
-            token = create_access_token(identity=str(usuario.id))
+            token         = create_access_token(identity=str(usuario.id))
             token_refresh = create_refresh_token(identity=str(usuario.id))
 
+            #  Log de auditoria: login bem-sucedido
+            audit_log.info(
+                "login_ok usuario_id=%s ip=%s",
+                usuario.id,
+                request.remote_addr
+            )
+
             return jsonify({
-                "access_token": token,
+                "access_token":  token,
                 "refresh_token": token_refresh,
-                "nome": usuario.nome,
-                "tipo": usuario.tipo
+                "nome":          usuario.nome,
+                "tipo":          usuario.tipo
             })
+
+        # Log de auditoria: tentativa falha com IP
+        audit_log.warning(
+            "login_falhou numero=%s ip=%s",
+            numero,
+            request.remote_addr
+        )
 
         return jsonify({"erro": "Credenciais inválidas."}), 401
 
@@ -208,19 +237,24 @@ def create_app() -> Flask:
         if arquivo.filename == "":
             return jsonify({"erro": "Nenhum arquivo selecionado"}), 400
 
-        extensoes_permitidas = {"csv", "xlsx", "xls"}
+        extensoes_permitidas = {"xlsx", "xls"}
         extensao = arquivo.filename.rsplit(".", 1)[-1].lower()
 
         if extensao not in extensoes_permitidas:
             return jsonify({
-                "erro": "Formato inválido. Use csv, xlsx ou xls."
+                "erro": "Formato inválido. Use xlsx ou xls."
             }), 400
 
         conta_service.processar_upload(arquivo, usuario)
 
-        return jsonify({
-            "mensagem": "Extrato importado com sucesso!"
-        }), 200
+        audit_log.info(
+            "upload_ok usuario_id=%s ip=%s filename=%s",
+            usuario_id,
+            request.remote_addr,
+            arquivo.filename
+        )
+
+        return jsonify({"mensagem": "Extrato importado com sucesso!"}), 200
 
     # ===============================
     # DASHBOARD
@@ -230,23 +264,20 @@ def create_app() -> Flask:
     @limiter.limit("60 per minute")
     def dashboard():
         usuario_id = int(get_jwt_identity())
-
         saldos = conta_repo.buscar_saldos_mensais(usuario_id)
 
         if not saldos:
             return jsonify([])
 
-        resultado = [
+        return jsonify([
             {
-                "mes": row["mes"],
+                "mes":           row["mes"],
                 "total_credito": float(row["total_credito"]),
-                "total_debito": float(row["total_debito"]),
-                "saldo": float(row["saldo"]),
+                "total_debito":  float(row["total_debito"]),
+                "saldo":         float(row["saldo"]),
             }
             for row in saldos
-        ]
-
-        return jsonify(resultado)
+        ])
 
     # ===============================
     # TRANSAÇÕES
@@ -256,17 +287,13 @@ def create_app() -> Flask:
     @limiter.limit("60 per minute")
     def transacoes():
         usuario_id = int(get_jwt_identity())
-
         registros = conta_repo.buscar_transacoes(usuario_id)
-
-        if not registros:
-            return jsonify([])
-
-        return jsonify(registros)
+        return jsonify(registros or [])
 
     # ===============================
     # CATEGORIZAR
     # ===============================
+    # Adicione categorias aqui; nunca aceite valores livres do cliente.
     @app.route("/api/categorizar", methods=["POST"])
     @jwt_required()
     @limiter.limit("30 per minute")
@@ -277,34 +304,18 @@ def create_app() -> Flask:
         if not data:
             return jsonify({"erro": "JSON inválido"}), 400
 
-        transacao_id = data.get("transacao_id")
-        categoria = data.get("categoria")
+        transacao_id  = data.get("transacao_id")
+        categoria     = str(data.get("categoria", "")).strip()
         aplicar_todas = data.get("aplicar_todas", False)
-
-        categorias_validas = {
-            "Receita",
-            "Moradia",
-            "Alimentação",
-            "Transporte",
-            "Saúde",
-            "Lazer",
-            "Educação",
-            "Investimento",
-            "Sem categoria"
-        }
 
         if not transacao_id or not categoria:
             return jsonify({"erro": "Dados incompletos."}), 400
 
-        if categoria not in categorias_validas:
+        if categoria not in CATEGORIAS_VALIDAS:
             return jsonify({"erro": "Categoria inválida."}), 400
 
         if aplicar_todas:
-            transacao = conta_repo.buscar_transacao_por_id(
-                transacao_id,
-                usuario_id
-            )
-
+            transacao = conta_repo.buscar_transacao_por_id(transacao_id, usuario_id)
             if not transacao:
                 return jsonify({"erro": "Transação não encontrada"}), 404
 
@@ -314,17 +325,9 @@ def create_app() -> Flask:
                 categoria,
                 usuario_id
             )
+            return jsonify({"mensagem": f"{qtd} transação(ões) categorizadas!"})
 
-            return jsonify({
-                "mensagem": f"{qtd} transação(ões) categorizadas!"
-            })
-
-        conta_repo.atualizar_categoria(
-            transacao_id,
-            categoria,
-            usuario_id
-        )
-
+        conta_repo.atualizar_categoria(transacao_id, categoria, usuario_id)
         return jsonify({"mensagem": "Transação categorizada!"})
 
     # ===============================
@@ -335,17 +338,9 @@ def create_app() -> Flask:
     @limiter.limit("60 per minute")
     def investimentos():
         usuario_id = int(get_jwt_identity())
-
         dados = investimento_repo.buscar_por_usuario(usuario_id)
+        return jsonify(dados or [])
 
-        if not dados:
-            return jsonify([])
-
-        return jsonify(dados)
-
-    # ===============================
-    # SALVAR INVESTIMENTOS
-    # ===============================
     @app.route("/api/investimentos/salvar", methods=["POST"])
     @jwt_required()
     @limiter.limit("20 per minute")
@@ -356,14 +351,12 @@ def create_app() -> Flask:
         if not data:
             return jsonify({"erro": "JSON inválido"}), 400
 
-        papel = str(data.get("papel", "")).strip()
-        saldo = data.get("saldo")
+        papel    = str(data.get("papel",    "")).strip()
+        saldo    = data.get("saldo")
         descricao = str(data.get("descricao", "Sem descrição")).strip()
 
         if not papel or saldo is None:
-            return jsonify({
-                "erro": "Preencha todos os campos obrigatórios."
-            }), 400
+            return jsonify({"erro": "Preencha todos os campos obrigatórios."}), 400
 
         try:
             saldo = float(saldo)
@@ -379,20 +372,9 @@ def create_app() -> Flask:
         if len(descricao) > 120:
             return jsonify({"erro": "Descrição muito longa."}), 400
 
-        investimento_repo.salvar(
-            usuario_id,
-            saldo,
-            papel.upper(),
-            descricao
-        )
+        investimento_repo.salvar(usuario_id, saldo, papel.upper(), descricao)
+        return jsonify({"mensagem": "Investimento salvo com sucesso!"})
 
-        return jsonify({
-            "mensagem": "Investimento salvo com sucesso!"
-        })
-
-    # ===============================
-    # REMOVER INVESTIMENTO
-    # ===============================
     @app.route(
         "/api/investimentos/remover/<int:investimento_id>",
         methods=["DELETE"]
@@ -403,18 +385,18 @@ def create_app() -> Flask:
         usuario_id = int(get_jwt_identity())
 
         if investimento_id <= 0:
-            return jsonify({
-                "erro": "Investimento inválido."
-            }), 400
+            return jsonify({"erro": "Investimento inválido."}), 400
 
-        investimento_repo.remover(
+        investimento_repo.remover(investimento_id, usuario_id)
+
+        audit_log.info(
+            "investimento_removido id=%s usuario_id=%s ip=%s",
             investimento_id,
-            usuario_id
+            usuario_id,
+            request.remote_addr
         )
 
-        return jsonify({
-            "mensagem": "Investimento removido."
-        })
+        return jsonify({"mensagem": "Investimento removido."})
 
     return app
 

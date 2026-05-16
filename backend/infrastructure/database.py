@@ -2,13 +2,30 @@ import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from dotenv import load_dotenv
+load_dotenv(encoding="utf-8", override=True)
 
 # -------------------------------------------------------------------
 # Conexão
 # Em desenvolvimento: define DATABASE_URL no seu .env
 # No Render: a variável é preenchida automaticamente pelo serviço PostgreSQL
 # -------------------------------------------------------------------
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///financer.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///financer.db").strip()
+
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgresql://",
+        "postgresql+psycopg://",
+        1
+    )
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True
+)
 
 # O Render fornece URLs com prefixo "postgres://", mas o SQLAlchemy exige "postgresql://"
 if DATABASE_URL.startswith("postgres://"):

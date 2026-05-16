@@ -2,7 +2,7 @@ import pandas as pd
 from infrastructure.loader import ExcelLoader
 from models.main import Conta
 from typing import Protocol
-
+from services.category import TERMOS_TRANSFERENCIA
 
 class ContaRepositoryProtocol(Protocol):
     def salvar_transacoes(self, conta: Conta, usuario_id: int) -> None: ...
@@ -22,6 +22,11 @@ class ContaService:
         """
         self._conta_repo = conta_repo
         self._loader_cls = loader_cls
+
+    def _e_transferencia_propria(self, row, nome_titular: str) -> bool:
+        detalhe = str(row.get("detalhe", "")).lower()
+        nome = nome_titular.lower()
+        return any(t in detalhe for t in TERMOS_TRANSFERENCIA) and nome in detalhe
 
     def processar_upload(self, arquivo, usuario) -> Conta:
         loader = self._loader_cls(arquivo)
@@ -56,6 +61,10 @@ class ContaService:
                     (existente_mes['detalhe'] == row['detalhe']) &
                     (existente_mes['credito'] == row['credito']) &
                     (existente_mes['debito'] == row['debito'])).any():
+                # ✅ Ponto 1 — marca automaticamente ao entrar no sistema
+                if self._e_transferencia_propria(row, usuario.nome):
+                    row = row.copy()
+                    row['categoria'] = 'Transferência Própria'
                 novas.append(row)
 
         if novas:
@@ -69,7 +78,13 @@ class ContaService:
         if todas_as_transacoes:
             todas_as_transacoes = pd.DataFrame(todas_as_transacoes)
             todas_as_transacoes['data'] = pd.to_datetime(todas_as_transacoes['data'], errors='coerce')
-            conta.recalcular_saldo_do_banco(todas_as_transacoes)
+
+            # ✅ Ponto 2 — exclui transferências próprias do cálculo de saldo
+            para_calculo = todas_as_transacoes[
+                todas_as_transacoes.get('categoria', pd.Series(dtype=str))
+                != 'Transferência Própria'
+            ]
+            conta.recalcular_saldo_do_banco(para_calculo)
         else:
             conta.recalcular_saldo_do_banco(pd.DataFrame(columns=['data', 'tipo', 'detalhe', 'credito', 'debito']))
 
